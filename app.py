@@ -4,8 +4,8 @@ from flask import Flask
 
 DATABASE_USERNAME = os.environ["CG4002_DATABASE_USERNAME"]
 DATABASE_PASSWORD = os.environ["CG4002_DATABASE_PASSWORD"]
-client = pymongo.MongoClient("mongodb:" + DATABASE_USERNAME + "//:" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v")
 
+client = pymongo.MongoClient("mongodb://" + DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v")
 app = Flask(__name__)
 
 @app.route('/')
