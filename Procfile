@@ -1,1 +1,3 @@
-web: gunicorn app:app
+// Procfile
+
+web: node server.js

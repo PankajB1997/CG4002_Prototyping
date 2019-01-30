@@ -1,0 +1,61 @@
+<!DOCTYPE>
+<html ng-app="coachingDashboard">
+    <head>
+        <title>CG4002 Coaching Dashboard</title>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular-route.js"></script>
+        <script src="https://code.angularjs.org/1.5.0/angular-animate.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angularjs-toaster/1.1.0/toaster.min.js"></script>
+        <script type="text/javascript" src="lib/filesaver.js"></script>
+        <script type="text/javascript" src="lib/jspdf.js"></script>
+
+        <script src="app.js"></script>
+        <script src="services/RepositoryService.js"></script>
+        <script src="controllers/HomeController.js"></script>
+        <script src="controllers/AddController.js"></script>
+        <script src="controllers/DetailsController.js"></script>
+        <script src="controllers/EditController.js"></script>
+        <script src="controllers/RemoveController.js"></script>
+        <script src="controllers/MasterController.js"></script>
+        <script src="controllers/MasterEditController.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="css/styles.css">
+    </head>
+    <body>
+        <header id="header" class="header-panel affix-top">
+            <div class="container" style="background-color: #0E48A1 !important">
+                <div class="row">
+                    <h4 align="center"><font color="white"><b>CG4002 Coaching Dashboard</b></font></h4>
+                    <h4 align="center">
+                            <button class="btn-link">
+                                <font color="gold">
+                                    Add New Dancer
+                                </font>
+                            </button>
+                            <font color="gold">&nbsp;|&nbsp;</font>
+                            <button class="btn-link">
+                                <font color="gold">
+                                    Upload CSV
+                                </font>
+                            </button>
+                        </font>
+                    </h4>
+                </div>
+            </div>
+        </header>
+        <div class="container" id="ngview">
+            <br />
+            <div ng-view></div>
+        </div>
+        <footer id="footer" class="footer-panel affix-bottom" style="bottom: 50px; width: 100%; text-align: center">
+            <div class="container" style="background-color: #0E48A1 !important">
+                <br />
+                <p align="center"><font color="white">Designed by: </font><a href="https://www.linkedin.com/in/pankaj-bhootra-8b2182a1/" target="_blank"><font color="gold">Pankaj Bhootra</font></a></p>
+            </div>
+        </footer>
+    </body>
+</html>

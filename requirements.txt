@@ -1,3 +1,0 @@
-Flask==0.12.2
-pymongo==2.8
-gunicorn==19.0.0

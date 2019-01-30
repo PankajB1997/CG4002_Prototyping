@@ -1,0 +1,20 @@
+dd {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.container {
+    width:100%;
+    margin :0;
+ }
+
+ #ngview {
+     height: 100vh;
+     background-color: #D9DFEA;
+ }
+
+ .btn-primary {
+     background-color: #0E48A1;
+ }
