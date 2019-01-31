@@ -23,36 +23,43 @@
         <link rel="stylesheet" type="text/css" href="css/styles.css">
     </head>
     <body>
-        <header id="header" class="header-panel affix-top">
-            <div class="container" style="background-color: #0E48A1 !important">
-                <div class="row">
-                    <h4 align="center"><a href="/#!/"><font color="white"><b>CG4002 Coaching Dashboard</b></font></a></h4>
-                    <h4 align="center">
-                            <button class="btn-link" onclick="window.location.href='/#!/master/add'">
-                                <font color="gold">
-                                    Add New Dancer
-                                </font>
-                            </button>
-                            <font color="gold">&nbsp;|&nbsp;</font>
-                            <button class="btn-link" onclick="window.location.href='/#!/master/upload-csv'">
-                                <font color="gold">
-                                    Upload CSV
-                                </font>
-                            </button>
-                        </font>
-                    </h4>
+        <div class="wrapper">
+            <header id="header" class="header-panel affix-top">
+                <div class="container" style="background-color: #0E48A1 !important">
+                    <div class="row">
+                        <h4 align="center"><a href="/#!/"><font color="white"><b>CG4002 Coaching Dashboard</b></font></a></h4>
+                        <h4 align="center">
+                                <button class="btn-link" onclick="window.location.href='/#!/master/add'">
+                                    <font color="gold">
+                                        Add New Dancer
+                                    </font>
+                                </button>
+                                <font color="gold">&nbsp;|&nbsp;</font>
+                                <button class="btn-link" onclick="window.location.href='/#!/testrun/add'">
+                                    <font color="gold">
+                                        Upload CSV
+                                    </font>
+                                </button>
+                            </font>
+                        </h4>
+                    </div>
                 </div>
+            </header>
+            <div class="container" id="ngview">
+                <br />
+                <div ng-view></div>
             </div>
-        </header>
-        <div class="container" id="ngview">
-            <br />
-            <div ng-view></div>
         </div>
+        <br>
         <footer id="footer" class="footer-panel affix-bottom" style="bottom: 50px; width: 100%; text-align: center">
             <div class="container" style="background-color: #0E48A1 !important">
                 <br />
                 <p align="center"><font color="white">Designed by: </font><a href="https://www.linkedin.com/in/pankaj-bhootra-8b2182a1/" target="_blank"><font color="gold">Pankaj Bhootra</font></a></p>
             </div>
         </footer>
+        <!-- <div class="footer-abs">
+            <br />
+            <p align="center"><font color="white">Designed by: </font><a href="https://www.linkedin.com/in/pankaj-bhootra-8b2182a1/" target="_blank"><font color="gold">Pankaj Bhootra</font></a></p>
+        </div> -->
     </body>
 </html>

@@ -10,15 +10,28 @@ hr {
 }
 
 .container {
-    width:100%;
-    margin :0;
+    width: 100%;
+    margin: 0;
  }
 
-#ngview {
-    height: 100vh;
+body, #ngview {
+    /* height: 100vh; */
     background-color: #D9DFEA;
 }
 
 .btn-primary {
     background-color: #0E48A1;
+}
+
+.wrapper {
+    min-height: 100%;
+    /* margin-bottom: 50px; */
+}
+
+#footer {
+  height: 50px;
+  width: 100%;
+  background-color: #0E48A1;
+  color: white;
+  text-align: center;
 }
