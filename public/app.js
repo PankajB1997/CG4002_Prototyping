@@ -11,17 +11,12 @@ var module = angular.module("coachingDashboard", [
         $routeProvider
             .when("/master/add", {
                 templateUrl: base + "master/add.html",
-                controller: "MasterController",
+                controller: "MasterAddController",
                 controllerAs: "vm"
             })
             .when("/master/edit/:id", {
                 templateUrl: base + "master/edit.html",
                 controller: "MasterEditController",
-                controllerAs: "vm"
-            })
-            .when("/master/upload-csv", {
-                templateUrl: base + "master/upload_csv.html",
-                controller: "MasterUploadCSVController",
                 controllerAs: "vm"
             })
             .when("/", {

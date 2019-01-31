@@ -1,11 +1,11 @@
 (function (app) {
     "use strict";
 
-    app.controller("MasterController", MasterController);
+    app.controller("MasterAddController", MasterAddController);
 
-    MasterController.$inject = ["$location", "toaster", "RepositoryService"];
+    MasterAddController.$inject = ["$location", "toaster", "RepositoryService"];
 
-    function MasterController($location, toaster, repository) {
+    function MasterAddController($location, toaster, repository) {
         var vm = this;
 
         vm.master = {};
