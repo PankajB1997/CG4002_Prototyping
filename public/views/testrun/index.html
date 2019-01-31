@@ -1,0 +1,56 @@
+<center>
+<div class="container">
+    <div class="row">
+        <div class="form-inline">
+            <div class="container">
+                <div class="row">
+                    <div class="form-group">
+                        <select class="form-control" name="selectLog" ng-model="vm.filter.selectLog" ng-options="item.label as item.label disable when item.disabled for item in vm.selectLogs"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <select class="form-control" name="selectDancer" ng-model="vm.filter.selectDancer" ng-options="item.label as item.label disable when item.disabled for item in vm.selectDancers"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="text" name="x_val" class="form-control" placeholder="Recent X testruns" ng-model="vm.filter.x_val" />
+                    </div>
+
+                    &nbsp;
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary glyphicon glyphicon-arrow-right" ng-click="vm.filter();" />
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary glyphicon glyphicon-remove" ng-click="vm.clearFilter();" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br />
+<hr>
+<br />
+
+<div class="container">
+    <div class="row">
+        <table class="table table-hover">
+            <tr>
+                <th>No.</th>
+                <th>Log selected</th>
+                <th>Dancer</th>
+                <th>Last X testruns (X=)</th>
+            </tr>
+            <tr ng-repeat="bill in vm.bills">
+                <td ng-click="$parent.selected = $index">{{ $index+1 }}</td>
+                <td>{{ bill.selectLog }}</td>
+                <td>{{ bill.selectDancer }}</td>
+                <td>{{ bill.x_val }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+</center>

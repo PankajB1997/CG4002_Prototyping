@@ -1,6 +1,6 @@
 <form name="form" novalidate ng-submit="vm.save()">
     <div class="form-horizontal">
-        <h4>Edit Dancer</h4>
+        <h4>Add New Dancer</h4>
         <hr />
 
         <div class="form-group" ng-class="{ 'has-error': form.name.$invalid }">
@@ -28,8 +28,41 @@
                 &nbsp;
                 |
                 &nbsp;
-                <a ng-click="vm.cancel()">Cancel</a>
+                <a ng-click="vm.clear()">Clear</a>
+                &nbsp;
+                |
+                &nbsp;
+                <a ng-click="vm.cancel()">Back to Home</a>
             </div>
         </div>
     </div>
 </form>
+
+<div>
+    <hr>
+    <h4>Added Dancers</h4>
+    <br />
+    <table class="table table-hover">
+        <tr>
+            <th>No.</th>
+            <th>Dancer Name</th>
+            <th>Dancer Type</th>
+            <th></th>
+        </tr>
+        <tr ng-repeat="data in vm.master">
+            <td ng-click="$parent.selected = $index">{{ $index+1 }}</td>
+            <td>{{ data.name }}</td>
+            <td>{{ data.type }}</td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-lg dropdown-toggle" type="button" data-toggle="dropdown">
+                    <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                        <li><a ng-click="vm.edit(data._id)">Edit</a></li>
+                        <li><a ng-click="vm.remove(data._id)">Remove</a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>

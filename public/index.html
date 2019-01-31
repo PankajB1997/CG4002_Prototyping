@@ -16,9 +16,9 @@
         <script src="services/RepositoryService.js"></script>
         <script src="controllers/HomeController.js"></script>
         <script src="controllers/AddController.js"></script>
-        <script src="controllers/DetailsController.js"></script>
+        <!-- <script src="controllers/DetailsController.js"></script>
         <script src="controllers/EditController.js"></script>
-        <script src="controllers/RemoveController.js"></script>
+        <script src="controllers/RemoveController.js"></script> -->
         <script src="controllers/MasterController.js"></script>
         <script src="controllers/MasterEditController.js"></script>
 
@@ -31,13 +31,13 @@
                 <div class="row">
                     <h4 align="center"><font color="white"><b>CG4002 Coaching Dashboard</b></font></h4>
                     <h4 align="center">
-                            <button class="btn-link">
+                            <button class="btn-link" onclick="window.location.href='/#!/master/add'">
                                 <font color="gold">
                                     Add New Dancer
                                 </font>
                             </button>
                             <font color="gold">&nbsp;|&nbsp;</font>
-                            <button class="btn-link">
+                            <button class="btn-link" onclick="window.location.href='/#!/master/upload-csv'">
                                 <font color="gold">
                                     Upload CSV
                                 </font>

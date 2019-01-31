@@ -5,16 +5,20 @@ dd {
   margin-right: 0;
 }
 
+hr {
+    border-color: #0E48A1;
+}
+
 .container {
     width:100%;
     margin :0;
  }
 
- #ngview {
-     height: 100vh;
-     background-color: #D9DFEA;
- }
+#ngview {
+    height: 100vh;
+    background-color: #D9DFEA;
+}
 
- .btn-primary {
-     background-color: #0E48A1;
- }
+.btn-primary {
+    background-color: #0E48A1;
+}

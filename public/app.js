@@ -9,38 +9,43 @@ var module = angular.module("coachingDashboard", [
         var base = "/views/";
 
         $routeProvider
-            .when("/", {
-                templateUrl: base + "bill/index.html",
-                controller: "HomeController",
-                controllerAs: "vm"
-            })
-            .when("/bill/add", {
-                templateUrl: base + "bill/add.html",
-                controller: "AddController",
-                controllerAs: "vm"
-            })
-            .when("/bill/add-master", {
-                templateUrl: base + "master/index.html",
+            .when("/master/add", {
+                templateUrl: base + "master/add.html",
                 controller: "MasterController",
                 controllerAs: "vm"
             })
-            .when("/bill/add-master/:id", {
+            .when("/master/edit/:id", {
                 templateUrl: base + "master/edit.html",
                 controller: "MasterEditController",
                 controllerAs: "vm"
             })
-            .when("/bill/details/:id", {
-                templateUrl: base + "bill/details.html",
+            .when("/master/upload-csv", {
+                templateUrl: base + "master/upload_csv.html",
+                controller: "MasterUploadCSVController",
+                controllerAs: "vm"
+            })
+            .when("/", {
+                templateUrl: base + "testrun/index.html",
+                controller: "HomeController",
+                controllerAs: "vm"
+            })
+            .when("/testrun/add", {
+                templateUrl: base + "testrun/add.html",
+                controller: "AddController",
+                controllerAs: "vm"
+            })
+            .when("/testrun/details/:id", {
+                templateUrl: base + "testrun/details.html",
                 controller: "DetailsController",
                 controllerAs: "vm"
             })
-            .when("/bill/edit/:id", {
-                templateUrl: base + "bill/edit.html",
+            .when("/testrun/edit/:id", {
+                templateUrl: base + "testrun/edit.html",
                 controller: "EditController",
                 controllerAs: "vm"
             })
-            .when("/bill/remove/:id", {
-                templateUrl: base + "bill/remove.html",
+            .when("/testrun/remove/:id", {
+                templateUrl: base + "testrun/remove.html",
                 controller: "RemoveController",
                 controllerAs: "vm"
             });

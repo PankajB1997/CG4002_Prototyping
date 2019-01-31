@@ -10,68 +10,53 @@
 
         var apiUrl = "/api";
 
-        svc.getBills = getBills;
-        svc.getBill = getBill;
-        svc.createBill = createBill;
-        svc.updateBill = updateBill;
-        svc.deleteBill = deleteBill;
+        svc.getTestruns = getTestruns;
+        svc.getTestrun = getTestrun;
+        svc.createTestrun = createTestrun;
+        svc.updateTestrun = updateTestrun;
+        svc.deleteTestrun = deleteTestrun;
         svc.getMasterData = getMasterData;
         svc.getSpecificMasterData = getSpecificMasterData;
         svc.addNewMasterData = addNewMasterData;
         svc.deleteMasterData = deleteMasterData;
         svc.updateMasterData = updateMasterData;
-        svc.getOriginalItemRate = getOriginalItemRate;
-        svc.getGSTRate = getGSTRate;
-        svc.updateGSTRate = updateGSTRate;
 
-        function getBills(fields) {
+        function getTestruns(fields) {
             var queryString = [];
 
             if (fields.pageSize) {
                 queryString.push("pageSize=" + fields.pageSize);
             }
 
-            if (fields.vendorName) {
-                queryString.push("vendorName=" + fields.vendorName);
+            if (fields.logType) {
+                queryString.push("logType=" + fields.logType);
             }
 
-            if (fields.billTo) {
-                queryString.push("billTo=" + fields.billTo);
+            if (fields.logType == "selected" && fields.dancers) {
+                queryString.push("dancers=" + fields.dancers); // fix this
             }
 
-            if (fields.billNo) {
-                queryString.push("billNo=" + fields.billNo);
-            }
-
-            if (fields.billStartDate) {
-                queryString.push("billStartDate=" + fields.billStartDate.replace("/", "-").replace("/", "-"));
-            }
-
-            if (fields.billEndDate) {
-                queryString.push("billEndDate=" + fields.billEndDate.replace("/", "-").replace("/", "-"));
-            }
-
-            var url = [apiUrl, "bill"].join("/");
+            var url = [apiUrl, "testrun"].join("/");
 
             var fullUrl = queryString.length == 0 ? url : [url, "?", queryString.join("&")].join("");
 
             return $http.get(fullUrl);
         };
 
-        function getBill(id) {
-            return $http.get([apiUrl, "bill", id].join("/"));
+        function getTestrun(id) {
+            return $http.get([apiUrl, "testrun", id].join("/"));
         };
 
-        function createBill(model) {
-            return $http.post([apiUrl, "bill"].join("/"), model);
+        function createTestrun(model) {
+            return $http.post([apiUrl, "testrun"].join("/"), model);
         };
 
-        function updateBill(id, model) {
-            return $http.put([apiUrl, "bill", id].join("/"), model);
+        function updateTestrun(id, model) {
+            return $http.put([apiUrl, "testrun", id].join("/"), model);
         };
 
-        function deleteBill(id) {
-            return $http.delete([apiUrl, "bill", id].join("/"));
+        function deleteTestrun(id) {
+            return $http.delete([apiUrl, "testrun", id].join("/"));
         };
 
         function getMasterData() {
@@ -83,6 +68,7 @@
         };
 
         function addNewMasterData(model) {
+
             return $http.post([apiUrl, "master"].join("/"), model);
         };
 
@@ -94,34 +80,5 @@
             return $http.put([apiUrl, "master", id].join("/"), model);
         };
 
-        function getOriginalItemRate(fields) {
-            var queryString = [];
-
-            if (fields.hoCode) {
-                queryString.push("hoCode=" + fields.hoCode);
-            }
-
-            if (fields.vendorItemCode) {
-                queryString.push("vendorItemCode=" + fields.vendorItemCode);
-            }
-
-            if (fields.itemDescription) {
-                queryString.push("itemDescription=" + fields.itemDescription);
-            }
-
-            var url = [apiUrl, "master"].join("/");
-
-            var fullUrl = queryString.length == 0 ? url : [url, "?", queryString.join("&")].join("");
-
-            return $http.get(fullUrl);
-        }
-
-        function getGSTRate() {
-            return $http.get([apiUrl, "gst"].join("/"));
-        };
-
-        function updateGSTRate(model) {
-            return $http.post([apiUrl, "gst"].join("/"), model);
-        };
     };
 })(angular.module("coachingDashboard"));

@@ -21,12 +21,12 @@
 
         function save() {
             repository.updateMasterData(id, vm.model).then(function (result) {
-                $location.path("/bill/add-master");
+                $location.path("/master/add");
             });
         };
 
         function cancel() {
-            $location.path("/bill/add-master");
+            $location.path("/master/add");
         };
     };
 })(angular.module("coachingDashboard"));

@@ -14,10 +14,6 @@
             vm.master = result.data;
         });
 
-        repository.getGSTRate().then(function (res) {
-            vm.gstRate = res.data.gstRate;
-        });
-
         vm.model = {};
 
         vm.edit = edit;
@@ -25,30 +21,23 @@
         vm.save = save;
         vm.clear = clear;
         vm.cancel = cancel;
-        vm.updateGSTRate = updateGSTRate;
 
         function edit(id) {
-            $location.path("/bill/add-master/" + id);
+            $location.path("/master/edit/" + id);
         }
 
         function remove(id) {
             repository.deleteMasterData(id).then(function (result) {
-                $location.path("/bill/add-master");
+                $location.path("/master/add");
                 repository.getMasterData().then(function (result) {
                     vm.master = result.data;
                 });
             });
         }
 
-        function updateGSTRate() {
-            repository.updateGSTRate({ gstRate: vm.gstRate }).then(function (result) {
-                $location.path("/");
-            });
-        }
-
         function save() {
             repository.addNewMasterData(vm.model).then(function (result) {
-                $location.path("/bill/add-master");
+                $location.path("/master/add");
                 vm.model = {};
                 vm.model.vendorName = result.data.vendorName;
                 repository.getMasterData().then(function (result) {
@@ -59,7 +48,6 @@
 
         function clear() {
             vm.model = {};
-            // $location.path("/");
         };
 
         function cancel() {

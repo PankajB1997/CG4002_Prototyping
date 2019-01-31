@@ -4,12 +4,12 @@ function api (app) {
     const DATABASE_USERNAME = process.env.CG4002_DATABASE_USERNAME
     const DATABASE_PASSWORD = process.env.CG4002_DATABASE_PASSWORD
 
-    var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["testrun_data", "sensor_data"]);
+    var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data"]);
 
     days = [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
     months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
 
-    app.get("/api/bill", function (request, response) {
+    app.get("/api/testrun", function (request, response) {
         var pageSize = request.query.pageSize ? parseInt(request.query.pageSize) : 1000;
 
         var find = {};
@@ -18,29 +18,7 @@ function api (app) {
             find.vendorName = new RegExp(request.query.vendorName, "i");
         }
 
-        if (request.query.billTo) {
-            find.billTo = new RegExp(request.query.billTo, "i");
-        }
-
-        if (request.query.billNo) {
-            find.billNo = new RegExp(request.query.billNo, "i");
-        }
-
-        if (request.query.billStartDate || request.query.billEndDate) {
-            find.billDate = {};
-            if (request.query.billStartDate) {
-                var billDMYS = request.query.billStartDate.split("-");
-                var billStartDate = new Date(billDMYS[2], billDMYS[1]-1, billDMYS[0]);
-                find.billDate.$gte = billStartDate;
-            }
-            if (request.query.billEndDate) {
-                var billDMYE = request.query.billEndDate.split("-");
-                var billEndDate = new Date(billDMYE[2], billDMYE[1]-1, billDMYE[0]);
-                find.billDate.$lte = billEndDate;
-            }
-        }
-
-        var result = db.bills.find(find).sort({ "billDate": -1 }).limit(pageSize, function (err, docs) {
+        var result = db.testrun_data.find(find).sort({ "billDate": -1 }).limit(pageSize, function (err, docs) {
             // for (var i = 0; i < docs.length; i++) {
             //     docs[i]["billDate"] = docs[i]["billDate"].toISOString();
             // }
@@ -65,10 +43,10 @@ function api (app) {
         });
     });
 
-    app.get("/api/bill/:id", function (request, response) {
+    app.get("/api/testrun/:id", function (request, response) {
         var id = request.params.id;
 
-        db.bills.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+        db.testrun_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             // fulldate = new Date(doc["date"]);
@@ -94,27 +72,27 @@ function api (app) {
         });
     });
 
-    app.post("/api/bill", function (request, response) {
+    app.post("/api/testrun", function (request, response) {
         date = new Date(Date.now());
         request.body["date"] = date.toISOString();
         if (request.body["billDate"]) {
             var billDMY = request.body["billDate"].split("/");
             request.body["billDate"] = new Date(billDMY[2], billDMY[1]-1, billDMY[0]);
         }
-        db.bills.insert(request.body, function (err, doc) {
+        db.testrun_data.insert(request.body, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             response.json(doc);
         });
     });
 
-    app.put("/api/bill/:id", function (request, response) {
+    app.put("/api/testrun/:id", function (request, response) {
         var id = request.params.id;
         if (request.body["billDate"]) {
             var billDMY = request.body["billDate"].split("/");
             request.body["billDate"] = new Date(billDMY[2], billDMY[1]-1, billDMY[0]);
         }
-        db.bills.findAndModify({
+        db.testrun_data.findAndModify({
             query: {
                 _id: mongojs.ObjectId(id)
             },
@@ -138,10 +116,10 @@ function api (app) {
         });
     });
 
-    app.delete("/api/bill/:id", function (request, response) {
+    app.delete("/api/testrun/:id", function (request, response) {
         var id = request.params.id;
 
-        db.bills.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+        db.testrun_data.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             response.json(doc);
@@ -149,29 +127,16 @@ function api (app) {
     });
 
     app.get("/api/master", function (request, response) {
-        var find = {};
-
-        if (request.query.hoCode) {
-            find.hoCode = new RegExp(request.query.hoCode, "i");
-        }
-
-        if (request.query.vendorItemCode) {
-            find.vendorItemCode = new RegExp(request.query.vendorItemCode, "i");
-        }
-
-        if (request.query.itemDescription) {
-            find.itemDescription = new RegExp(request.query.itemDescription, "i");
-        }
-
-        db.billsMaster.find(find).sort({ "hoCode": 1 }, function (err, docs) {
+        db.dancer_data.find({}).sort({ name : 1, type: 1 }).toArray(function (err, docs) {
+            if (err)
+                console.log("Error: " + err);
             response.json(docs);
         });
     });
 
     app.get("/api/master/:id", function (request, response) {
         var id = request.params.id;
-
-        db.billsMaster.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+        db.dancer_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             response.json(doc);
@@ -179,7 +144,7 @@ function api (app) {
     });
 
     app.post("/api/master", function (request, response) {
-        db.billsMaster.insert(request.body, function (err, doc) {
+        db.dancer_data.insert(request.body, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             response.json(doc);
@@ -189,7 +154,7 @@ function api (app) {
     app.delete("/api/master/:id", function (request, response) {
         var id = request.params.id;
 
-        db.billsMaster.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+        db.dancer_data.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             response.json(doc);
@@ -199,17 +164,14 @@ function api (app) {
     app.put("/api/master/:id", function (request, response) {
         var id = request.params.id;
 
-        db.billsMaster.findAndModify({
+        db.dancer_data.findAndModify({
             query: {
                 _id: mongojs.ObjectId(id)
             },
             update: {
                 $set: {
-                    vendorName: request.body.vendorName,
-                    vendorItemCode: request.body.vendorItemCode,
-                    hoCode: request.body.hoCode,
-                    itemDescription: request.body.itemDescription,
-                    negotiatedRate: request.body.negotiatedRate
+                    type: request.body.type,
+                    name: request.body.name
                 }
             },
             new: true
@@ -218,25 +180,6 @@ function api (app) {
         });
     });
 
-    app.get("/api/gst", function (request, response) {
-        db.gst.find({}, function (err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            response.json(doc[0]);
-        });
-    });
-
-    app.post("/api/gst", function (request, response) {
-        db.gst.remove({}, function(err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            db.gst.insert(request.body, function (err, doc) {
-                if (err)
-                    console.log("Error: " + err);
-                response.json(doc[0]);
-            });
-        });
-    });
 };
 
 module.exports = api;

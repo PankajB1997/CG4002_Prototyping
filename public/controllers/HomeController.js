@@ -7,21 +7,21 @@
 
     function preprocessor(objArray) {
         var resArray = [];
-        var properties = ["billNo", "billDate", "vendorName", "billTo", "totalBillAmount", "totalClaimAmount", "modeOfPayment", "instrumentNo", "paymentStatus"];
-        var propertyLabels = ["BILL NO.", "BILL DATE", "VENDOR NAME", "BILL TO", "TOTAL BILL AMOUNT", "TOTAL CLAIM AMOUNT", "MODE OF PAYMENT", "INSTRUMENT NO.", "PAYMENT STATUS"];
-        var itemProperties = ["itemDescription", "quantity", "billingUnit", "rate", "billing", "gst", "billAmount", "rateDifference", "claimAmount"];
-        var itemPropertyLabels = ["PRODUCT", "QTY", "BILLING UNIT", "RATE", "BILLING", "GST", "BILL AMOUNT", "RATE DIFF", "CLAIM AMT"];
+        var properties = ["x_val", "selectDancer", "selectLog"];
+        var propertyLabels = ["X_VAL", "DANCER", "LOG"];
+        // var itemProperties = ["itemDescription", "quantity", "billingUnit", "rate", "billing", "gst", "billAmount", "rateDifference", "claimAmount"];
+        // var itemPropertyLabels = ["PRODUCT", "QTY", "BILLING UNIT", "RATE", "BILLING", "GST", "BILL AMOUNT", "RATE DIFF", "CLAIM AMT"];
 
         for(var row in objArray) {
             for(var product in objArray[row].items) {
-                var bill = {};
+                var testrun = {};
                 for(var i=0; i<properties.length; i++) {
-                    bill[propertyLabels[i]] = (typeof objArray[row][properties[i]] == "undefined" || objArray[row][properties[i]] == null ? "" : objArray[row][properties[i]]);
+                    testrun[propertyLabels[i]] = (typeof objArray[row][properties[i]] == "undefined" || objArray[row][properties[i]] == null ? "" : objArray[row][properties[i]]);
                 }
-                for(var j=0; j<itemProperties.length; j++) {
-                    bill[itemPropertyLabels[j]] = (typeof objArray[row].items[product][itemProperties[j]] == "undefined" || objArray[row].items[product][itemProperties[j]] == null ? "" : objArray[row].items[product][itemProperties[j]]);
-                }
-                resArray.push(bill);
+                // for(var j=0; j<itemProperties.length; j++) {
+                //     testrun[itemPropertyLabels[j]] = (typeof objArray[row].items[product][itemProperties[j]] == "undefined" || objArray[row].items[product][itemProperties[j]] == null ? "" : objArray[row].items[product][itemProperties[j]]);
+                // }
+                resArray.push(testrun);
             }
         }
 
@@ -52,149 +52,83 @@
 
     function HomeController($location, toaster, repository) {
         var vm = this;
-        vm.bills = [];
-        vm.search = {};
+        vm.testruns = [];
+        vm.filter = {};
 
-        repository.getBills(vm.search).then(function (result) {
-            vm.bills = result.data;
+        repository.getTestruns(vm.filter).then(function (result) {
+            vm.testruns = result.data;
         });
 
-        vm.vendorNames = [];
-        vm.vendorItemCodes = [];
-        vm.hoCodes = [];
-        vm.itemDescriptions = [];
-        vm.billTos = [
-            { label: "Billed To", disabled: true },
-            { label: "Vision World Pvt. Ltd." },
-            { label: "Specs World Pvt. Ltd." },
-            { label: "The Himalaya Optical Company" },
-            { label: "Himalaya Vision Crafter Pvt. Ltd." }
+        vm.selectLogs = [
+            { id: null, label: "Filter data", disabled: true },
+            { id: 'train', label: "Show only training set dancers" },
+            { id: 'test', label: "Show only testing set dancers" },
+            { id: 'selected', label: "Show only selected dancers..." },
+            { id: 'all', label: "Show all dancers" }
         ];
 
+        vm.selectDancers = [];
         repository.getMasterData().then(function (result) {
             for (var row in result.data) {
-                if (vm.vendorNames.includes(result.data[row]["vendorName"]) == false) {
-                    vm.vendorNames.push(result.data[row]["vendorName"]);
-                }
-                if (result.data[row]["vendorItemCode"] && vm.vendorItemCodes.includes(result.data[row]["vendorItemCode"]) == false) {
-                    vm.vendorItemCodes.push(result.data[row]["vendorItemCode"]);
-                }
-
-                if (result.data[row]["hoCode"] && vm.hoCodes.includes(result.data[row]["hoCode"]) == false) {
-                    vm.hoCodes.push(result.data[row]["hoCode"]);
-                }
-
-                if (vm.itemDescriptions.includes(result.data[row]["itemDescription"]) == false) {
-                    vm.itemDescriptions.push(result.data[row]["itemDescription"]);
+                var dancer = result.data[row]["name"] + " (" + result.data[row]["type"] + ")";
+                if (vm.selectDancers.includes(dancer) == false) {
+                    vm.selectDancers.push(dancer);
                 }
             }
-            vm.vendorNames.sort();
-            for (var val in vm.vendorNames) {
-                vm.vendorNames[val] = { label: vm.vendorNames[val] };
+            vm.selectDancers.sort();
+            for (var val in vm.selectDancers) {
+                vm.selectDancers[val] = { label: vm.selectDancers[val] };
             }
-            vm.vendorNames.unshift({ label: "Vendor Name", "disabled": true });
-            vm.search.vendorName = vm.vendorNames[0].label;
-            vm.vendorItemCodes.sort();
-            for (var val in vm.vendorItemCodes) {
-                vm.vendorItemCodes[val] = { label: vm.vendorItemCodes[val] };
-            }
-            vm.vendorItemCodes.unshift({ label: "Vendor Item Code", "disabled": true });
-            vm.hoCodes.sort();
-            for (var val in vm.hoCodes) {
-                vm.hoCodes[val] = { label: vm.hoCodes[val] };
-            }
-            vm.hoCodes.unshift({ label: "H.O. Code", "disabled": true });
-            vm.itemDescriptions.sort();
-            for (var val in vm.itemDescriptions) {
-                vm.itemDescriptions[val] = { label: vm.itemDescriptions[val] };
-            }
-            vm.itemDescriptions.unshift({ label: "Item Description", "disabled": true });
-            vm.search.billTo = vm.billTos[0].label;
+            vm.selectDancers.unshift({ label: "Select Dancer(s)", "disabled": true });
+            vm.filter.selectDancer = vm.selectDancers[0].label;
+            vm.filter.selectLog = vm.selectLogs[0].label;
         });
 
-        vm.add = function () {
-            $location.path("/bill/add/");
-        };
-
-        vm.addMaster = function () {
-            $location.path("/bill/add-master/");
-        };
-
-        vm.search = function () {
-            var searchString = {};
-            searchString.billNo = vm.search.billNo;
-            searchString.billStartDate = vm.search.billStartDate;
-            searchString.billEndDate = vm.search.billEndDate;
-            searchString.vendorName = vm.search.vendorName;
-            searchString.billTo = vm.search.billTo;
-            if (searchString.vendorName == "Vendor Name") {
-                searchString.vendorName = null;
+        vm.filter = function () {
+            var filterString = {};
+            filterString.pageSize = vm.filter.x_val;
+            for (logType in vm.selectLogs) {
+                if (vm.filter.selectLog == vm.selectLogs[logType].label) {
+                    filterString.logType = vm.selectLogs[logType].id;
+                    break;
+                }
             }
-            if (searchString.billTo == "Billed To") {
-                searchString.billTo = null;
+            if (filterString.logType == "selected") {
+                // Fix?
+                filterString.dancers = vm.filter.selectDancer;
             }
-            repository.getBills(searchString).then(function (result) {
-                vm.bills = result.data;
+            else {
+                filterString.dancers = null;
+            }
+            repository.getTestruns(filterString).then(function (result) {
+                vm.testruns = result.data;
             });
         };
 
-        vm.clearSearch = function() {
-            vm.search.billNo = null;
-            vm.search.billStartDate = null;
-            vm.search.billEndDate = null;
-            vm.search.vendorName = "Vendor Name";
-            vm.search.billTo = "Billed To";
-            repository.getBills({}).then(function (result) {
-                vm.bills = result.data;
+        vm.clearFilter = function() {
+            vm.filter.x_val = null;
+            vm.filter.selectDancer = "Select Dancer(s)";
+            vm.filter.selectLog = "Filter logs";
+            repository.getTestruns({}).then(function (result) {
+                vm.testruns = result.data;
             });
         }
 
-        vm.exportToExcel = function () {
-            var searchString = {};
-            searchString.billNo = vm.search.billNo;
-            searchString.billStartDate = vm.search.billStartDate;
-            searchString.billEndDate = vm.search.billEndDate;
-            searchString.vendorName = vm.search.vendorName;
-            searchString.billTo = vm.search.billTo;
-            if (searchString.vendorName == "Vendor Name") {
-                searchString.vendorName = null;
-            }
-            if (searchString.billTo == "Billed To") {
-                searchString.billTo = null;
-            }
-            repository.getBills(searchString).then(function (result) {
-                var csvData = ConvertToCSV(result.data);
-                var a = document.createElement("a");
-                a.setAttribute('style', 'display:none;');
-                document.body.appendChild(a);
-                var blob = new Blob([csvData], { type: 'text/csv' });
-                var url = window.URL.createObjectURL(blob);
-                a.href = url;
-                a.download = 'results.csv';
-                a.click();
-            });
-        };
+        // vm.add = function () {
+        //     $location.path("/bill/add/");
+        // };
 
-        vm.details = function (id) {
-            $location.path("/bill/details/" + id);
-        };
+        // vm.addMaster = function () {
+        //     $location.path("/bill/add-master/");
+        // };
 
-        vm.remove = function (id) {
-            $location.path("/bill/remove/" + id);
-        };
+        // vm.details = function (id) {
+        //     $location.path("/bill/details/" + id);
+        // };
 
-        vm.downloadClaim = function (id) {
-            repository.getBill(id).then(function (result) {
-                const doc = new jsPDF();
-                doc.text("Bill No.: " + result.data["billNo"], 10, 10);
-                doc.text("Bill Date: " + result.data["billDate"], 10, 20);
-                doc.text("Vendor Name: " + result.data["vendorName"], 10, 30);
-                doc.text("Billed To: " + result.data["billTo"], 10, 40);
-                doc.text("Total Bill Amount: " + result.data["totalBillAmount"], 10, 50);
-                doc.text("Total Claim Amount: " + result.data["totalClaimAmount"], 10, 60);
-                doc.text("Payment Status: " + result.data["paymentStatus"], 10, 70);
-                doc.save(result.data["vendorName"] + ".pdf");
-            });
-        };
-    };
+        // vm.remove = function (id) {
+        //     $location.path("/bill/remove/" + id);
+        // };
+    }
+
 })(angular.module("coachingDashboard"));
