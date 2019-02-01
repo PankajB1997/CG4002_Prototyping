@@ -1,7 +1,8 @@
 var module = angular.module("coachingDashboard", [
     "ngRoute",
     "ngAnimate",
-    "toaster"
+    "toaster",
+    "ngFileUpload"
 ]);
 
 (function (app) {

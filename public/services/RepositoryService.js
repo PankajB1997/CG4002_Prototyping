@@ -3,9 +3,9 @@
 
     app.service("RepositoryService", RepositoryService);
 
-    RepositoryService.$inject = ["$log", "$http"];
+    RepositoryService.$inject = ["$log", "$http", "Upload"];
 
-    function RepositoryService($log, $http) {
+    function RepositoryService($log, $http, Upload) {
         var svc = this;
 
         var apiUrl = "/api";
@@ -23,23 +23,17 @@
 
         function getTestruns(fields) {
             var queryString = [];
-
             if (fields.pageSize) {
                 queryString.push("pageSize=" + fields.pageSize);
             }
-
             if (fields.logType) {
                 queryString.push("logType=" + fields.logType);
             }
-
             if (fields.logType == "selected" && fields.dancers) {
                 queryString.push("dancers=" + fields.dancers); // fix this
             }
-
             var url = [apiUrl, "testrun"].join("/");
-
             var fullUrl = queryString.length == 0 ? url : [url, "?", queryString.join("&")].join("");
-
             return $http.get(fullUrl);
         };
 
@@ -48,7 +42,10 @@
         };
 
         function createTestrun(model) {
-            return $http.post([apiUrl, "testrun"].join("/"), model);
+            return Upload.upload({
+                url: [apiUrl, "testrun"].join("/"), //webAPI exposed to upload the file
+                data:{ csvfile: model.file, dancer: model.dancer } //pass file as data, should be user ng-model
+            });
         };
 
         function updateTestrun(id, model) {
@@ -68,7 +65,6 @@
         };
 
         function addNewMasterData(model) {
-
             return $http.post([apiUrl, "master"].join("/"), model);
         };
 

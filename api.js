@@ -1,13 +1,31 @@
 function api (app) {
-    var mongojs = require("mongojs");
+    const mongojs = require("mongojs");
+    const csv = require('csvtojson');
+    const multer = require('multer');
+    const uploadService = multer({ storage : multer.memoryStorage(), limits: { fileSize: 1000 * 1000 * 20 } }).single('csvfile');
 
     const DATABASE_USERNAME = process.env.CG4002_DATABASE_USERNAME
     const DATABASE_PASSWORD = process.env.CG4002_DATABASE_PASSWORD
 
     var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data"]);
 
-    days = [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
-    months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+    // days = [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
+    // months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+
+    function csv_to_json(csv) {
+        var lines = csv.split("\n");
+        var result = [];
+        var headers = lines[0].split(",");
+        for (var i = 1; i < lines.length; i++) {
+            var obj = {};
+            var currentline = lines[i].split(",");
+            for (var j = 0; j < headers.length; j++) {
+                obj[headers[j]] = currentline[j];
+            }
+            result.push(obj);
+        }
+        return JSON.stringify(result); //JSON
+    }
 
     app.get("/api/testrun", function (request, response) {
         var pageSize = request.query.pageSize ? parseInt(request.query.pageSize) : 1000;
@@ -72,18 +90,33 @@ function api (app) {
         });
     });
 
-    app.post("/api/testrun", function (request, response) {
-        date = new Date(Date.now());
-        request.body["date"] = date.toISOString();
-        if (request.body["billDate"]) {
-            var billDMY = request.body["billDate"].split("/");
-            request.body["billDate"] = new Date(billDMY[2], billDMY[1]-1, billDMY[0]);
-        }
+    app.post("/api/testrun", uploadService, function (request, response, next) {
+        request.body.file = request.file;
+        // TODO: CSV TO JSON
+        console.log(request.body);
+        // TODO: APPEND THIS JSON TO EXISTING RECORD FOR THIS DANCER
         db.testrun_data.insert(request.body, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
             response.json(doc);
         });
+        // csv().fromFile(request.file).subscribe((json)=>{
+        //     return new Promise((resolve,reject)=>{
+        //         date = new Date(Date.now());
+        //         request.body["date"] = date.toISOString();
+        //         if (request.body["date"]) {
+        //             var dmy = request.body["date"].split("/");
+        //             request.body["date"] = new Date(dmy[2], dmy[1]-1, dmy[0]);
+        //         }
+        //         request.body["file"] = json;
+        //         console.log(request.body);
+        //         db.testrun_data.insert(request.body, function (err, doc) {
+        //             if (err)
+        //                 console.log("Error: " + err);
+        //             response.json(doc);
+        //         });
+        //     })
+        // });
     });
 
     app.put("/api/testrun/:id", function (request, response) {

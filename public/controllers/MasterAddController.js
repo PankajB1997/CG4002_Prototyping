@@ -39,7 +39,6 @@
             repository.addNewMasterData(vm.model).then(function (result) {
                 $location.path("/master/add");
                 vm.model = {};
-                vm.model.vendorName = result.data.vendorName;
                 repository.getMasterData().then(function (result) {
                     vm.master = result.data;
                 });
