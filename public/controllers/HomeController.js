@@ -13,16 +13,29 @@
     const POWER_IDX = 7;
     const ENERGY_IDX = 8;
 
+    // Method to return average of a list of numbers
+    function average(list) {
+        var sum = 0;
+        for (var i in list) {
+            sum += list[i];
+        }
+        return Math.round((sum/list.length) * 100) / 100;
+    }
+
     // Returns overall accuracy across all testruns as well as a list of accuracy values corresponding to each testrun
     function calculateMetrics(testruns) {
         var accuracies = [];
-        var true_count, false_count, total_true_count = 0, total_false_count = 0;
-        var correct, accuracy, overall_accuracy;
-        var total_prediction_time = 0, total_voltage = 0, total_current = 0, total_power = 0, total_energy = 0;
-        var total_count = 0;
+        var prediction_times = [];
+        var voltages = [];
+        var currents = [];
+        var powers = [];
+        var energies = [];
+        var correct, true_count, false_count, total_true_count = 0, total_false_count = 0;
+        var total_prediction_time, total_voltage, total_current, total_power, total_energy;
+        var avg_accuracy;
         for (var row in testruns) {
-            true_count = 0;
-            false_count = 0;
+            true_count = false_count = 0;
+            total_prediction_time = total_voltage = total_current = total_power = total_energy = 0;
             for (var i=1; i<testruns[row].length; i++) {
                 correct = testruns[row][i][ACCURACY_IDX].toLowerCase().trim();
                 if (correct === "true") {
@@ -36,21 +49,24 @@
                 total_power += parseFloat(testruns[row][i][POWER_IDX].trim());
                 total_energy += parseFloat(testruns[row][i][ENERGY_IDX].trim());
             }
-            accuracy = Math.round(((true_count*100.0)/(false_count + true_count)) * 100) / 100;
-            accuracies.push(accuracy);
+            accuracies.push(Math.round(((true_count*100.0)/(false_count + true_count)) * 100) / 100);
+            prediction_times.push(Math.round((total_prediction_time/(testruns[row].length - 1)) * 100) / 100);
+            voltages.push(Math.round((total_voltage/(testruns[row].length - 1)) * 100) / 100);
+            currents.push(Math.round((total_current/(testruns[row].length - 1)) * 100) / 100);
+            powers.push(Math.round((total_power/(testruns[row].length - 1)) * 100) / 100);
+            energies.push(Math.round((total_energy/(testruns[row].length - 1)) * 100) / 100);
             total_true_count += true_count;
             total_false_count += false_count;
-            total_count += testruns[row].length - 1;
         }
-        overall_accuracy = Math.round(((total_true_count*100.0)/(total_false_count + total_true_count)) * 100) / 100;
+        avg_accuracy = Math.round(((total_true_count*100.0)/(total_false_count + total_true_count)) * 100) / 100;
         return {
-            overall_accuracy: overall_accuracy,
             accuracy_per_testrun: accuracies,
-            avg_prediction_time: Math.round((total_prediction_time/total_count) * 100) / 100,
-            avg_voltage: Math.round((total_voltage/total_count) * 100) / 100,
-            avg_current: Math.round((total_current/total_count) * 100) / 100,
-            avg_power: Math.round((total_power/total_count) * 100) / 100,
-            avg_energy: Math.round((total_energy/total_count) * 100) / 100
+            avg_accuracy: avg_accuracy,
+            avg_prediction_time: average(prediction_times),
+            avg_voltage: average(voltages),
+            avg_current: average(currents),
+            avg_power: average(powers),
+            avg_energy: average(energies)
         }
     }
 
@@ -137,7 +153,7 @@
         var analytics = [];
         var results = calculateMetrics(testruns);
         analytics.push({ name: "Number of test runs", value: testruns.length });
-        analytics.push({ name: "Overall prediction accuracy", value: results.overall_accuracy.toString() + " %" });
+        analytics.push({ name: "Overall prediction accuracy", value: results.avg_accuracy.toString() + " %" });
         analytics.push({ name: "Average prediction time per dance move", value: results.avg_prediction_time.toString() + " seconds" });
         analytics.push({ name: "Average voltage", value: results.avg_voltage.toString() + " V" });
         analytics.push({ name: "Average current", value: results.avg_current.toString() + " A" });
