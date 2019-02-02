@@ -36,6 +36,7 @@
 
     // Method to draw accuracy chart
     function drawChart(data) {
+        document.getElementById("accuracy-chart-caption").innerText = "Accuracy Chart";
         var labels = [];
         for (var i in data) {
             labels.push((parseInt(i)+1).toString());
@@ -113,6 +114,7 @@
         var accuracies = calculateAccuracyFigures(testruns);
         analytics.push({ name: "Overall prediction accuracy", value: accuracies.overall_accuracy.toString() + " %" })
         drawChart(accuracies.accuracy_per_testrun);
+        document.getElementById("metrics-caption").innerText = "Metrics";
         return analytics;
     }
 
