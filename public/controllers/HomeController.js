@@ -50,9 +50,39 @@
     //     return str;
     // }
 
+    // Combine testruns of different dancers into one list
+    function combiner(data) {
+        var testruns = [];
+        for (var dancer in data) {
+            testruns = testruns.concat(data[dancer].data);
+        }
+        return testruns;
+    }
+
+    /***
+     *** Calculate and return the following as a dictionary:
+     *** 1. Number of test runs
+     *** 2. Overall prediction accuracy
+     *** 3. Average prediction time per dance move
+     *** 4. (Upto) Top 3 confusing moves with detailed count
+     *** 5. Average Voltage
+     *** 6. Average Current
+     *** 7. Average Power
+     *** 8. Average Energy
+     *** 9. JSON for Accuracy Chart
+    **/
+    function runAnalytics(testruns) {
+        console.log(testruns);
+        var analytics = {};
+        analytics.num_testruns = testruns.length;
+
+        return analytics;
+    }
+
     function HomeController($location, toaster, repository) {
         var vm = this;
         vm.testruns = [];
+        vm.metrics = {};
         vm.filter = {};
 
         repository.getTestruns(vm.filter).then(function (result) {
@@ -67,9 +97,9 @@
             { id: 'all', label: "Show all dancers" }
         ];
 
-        vm.testruns = [];
         repository.getTestruns({}).then(function (result) {
-            console.log(result);
+            vm.metrics = runAnalytics(combiner(result.data));
+            console.log(vm.metrics);
         });
 
         vm.selectDancers = [];

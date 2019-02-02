@@ -31,7 +31,7 @@
 
         function save() {
             repository.createTestrun(vm.model).then(function (result) {
-                console.log(result);
+                // console.log(result);
                 $location.path("/");
             });
         };
