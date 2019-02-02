@@ -13,7 +13,7 @@
         var accuracies = [];
         var total_true_count = 0;
         var total_false_count = 0;
-        var val, true_count, false_count;
+        var val, true_count, false_count, accuracy, overall_accuracy;
         for (var row in testruns) {
             true_count = 0;
             false_count = 0;
@@ -25,11 +25,13 @@
                     false_count += 1;
                 }
             }
-            accuracies.push(((true_count*100.0)/(false_count + true_count)));
+            accuracy = Math.round(((true_count*100.0)/(false_count + true_count)) * 100) / 100;
+            accuracies.push(accuracy);
             total_true_count += true_count;
             total_false_count += false_count;
         }
-        return { overall_accuracy: ((total_true_count*100.0)/(total_false_count + total_true_count)), accuracy_per_testrun: accuracies }
+        overall_accuracy = Math.round(((total_true_count*100.0)/(total_false_count + total_true_count)) * 100) / 100;
+        return { overall_accuracy: overall_accuracy, accuracy_per_testrun: accuracies }
     }
 
     // Combine testruns of different dancers into one list
@@ -59,14 +61,67 @@
         var accuracies = calculateAccuracyFigures(testruns);
         analytics.overall_accuracy = accuracies.overall_accuracy;
         analytics.accuracy_chart = accuracies.accuracy_per_testrun;
+        drawChart(analytics.accuracy_chart);
+        console.log(analytics);
         return analytics;
+    }
+
+    function drawChart(data) {
+        var labels = [];
+        for (var i in data) {
+            labels.push((parseInt(i)+1).toString());
+        }
+        var ctx = document.getElementById('accuracy_chart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '  ',
+                    data: data,
+                    borderColor: '#0E48A1',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                          display: false,
+                          color: "#007DFF"
+                        },
+                        ticks: {
+                            fontColor: "#007DFF"
+                        }
+                    }],
+                    yAxes: [{
+                        gridLines: {
+                          // display: false,
+                          color: "#007DFF"
+                        },
+                        ticks: {
+                            fontColor: "#007DFF",
+                            beginAtZero: true
+                        }
+                    }]
+                },
+                elements: {
+                    line: {
+                        fill: false
+                    }
+                }
+            }
+        });
     }
 
     function HomeController($location, toaster, repository) {
         var vm = this;
         vm.testruns = [];
-        vm.metrics = {};
         vm.filter = {};
+        vm.metrics = {};
 
         vm.selectLogs = [
             { id: null, label: "Filter data", disabled: true },
@@ -78,7 +133,6 @@
 
         repository.getTestruns({}).then(function (result) {
             vm.metrics = runAnalytics(combiner(result.data));
-            console.log(vm.metrics);
         });
 
         vm.selectDancers = [];
@@ -99,23 +153,23 @@
         });
 
         vm.filter = function () {
-            var filterString = {};
-            filterString.pageSize = vm.filter.x_val;
-            for (logType in vm.selectLogs) {
-                if (vm.filter.selectLog == vm.selectLogs[logType].label) {
-                    filterString.logType = vm.selectLogs[logType].id;
-                    break;
-                }
-            }
-            if (filterString.logType == "selected") {
-                // Fix?
-                filterString.dancers = vm.filter.selectDancer;
-            }
-            else {
-                filterString.dancers = null;
-            }
-            repository.getTestruns(filterString).then(function (result) {
-                vm.testruns = result.data;
+            var filters = {};
+            // filters.pageSize = vm.filter.x_val;
+            // for (logType in vm.selectLogs) {
+            //     if (vm.filter.selectLog == vm.selectLogs[logType].label) {
+            //         filters.logType = vm.selectLogs[logType].id;
+            //         break;
+            //     }
+            // }
+            // if (filters.logType == "selected") {
+            //     // Fix?
+            //     filters.dancers = vm.filter.selectDancer;
+            // }
+            // else {
+            //     filters.dancers = null;
+            // }
+            repository.getTestruns(filters).then(function (result) {
+                vm.metrics = runAnalytics(combiner(result.data));
             });
         };
 
