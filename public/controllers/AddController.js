@@ -8,6 +8,8 @@
     function AddController($location, toaster, repository) {
         var vm = this;
 
+        vm.model = {};
+
         vm.dancers = [];
         repository.getMasterData().then(function (result) {
             for (var row in result.data) {
@@ -23,8 +25,6 @@
             vm.dancers.unshift({ label: "Select Dancer", "disabled": true });
             vm.model.dancer = vm.dancers[0].label;
         });
-
-        vm.model = {};
 
         vm.save = save;
         vm.cancel = cancel;

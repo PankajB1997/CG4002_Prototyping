@@ -5,50 +5,50 @@
 
     HomeController.$inject = ["$location", "toaster", "RepositoryService"];
 
-    function preprocessor(objArray) {
-        var resArray = [];
-        var properties = ["x_val", "selectDancer", "selectLog"];
-        var propertyLabels = ["X_VAL", "DANCER", "LOG"];
-        // var itemProperties = ["itemDescription", "quantity", "billingUnit", "rate", "billing", "gst", "billAmount", "rateDifference", "claimAmount"];
-        // var itemPropertyLabels = ["PRODUCT", "QTY", "BILLING UNIT", "RATE", "BILLING", "GST", "BILL AMOUNT", "RATE DIFF", "CLAIM AMT"];
+    // function preprocessor(objArray) {
+    //     var resArray = [];
+    //     var properties = ["x_val", "selectDancer", "selectLog"];
+    //     var propertyLabels = ["X_VAL", "DANCER", "LOG"];
+    //     // var itemProperties = ["itemDescription", "quantity", "billingUnit", "rate", "billing", "gst", "billAmount", "rateDifference", "claimAmount"];
+    //     // var itemPropertyLabels = ["PRODUCT", "QTY", "BILLING UNIT", "RATE", "BILLING", "GST", "BILL AMOUNT", "RATE DIFF", "CLAIM AMT"];
+    //
+    //     for(var row in objArray) {
+    //         for(var product in objArray[row].items) {
+    //             var testrun = {};
+    //             for(var i=0; i<properties.length; i++) {
+    //                 testrun[propertyLabels[i]] = (typeof objArray[row][properties[i]] == "undefined" || objArray[row][properties[i]] == null ? "" : objArray[row][properties[i]]);
+    //             }
+    //             // for(var j=0; j<itemProperties.length; j++) {
+    //             //     testrun[itemPropertyLabels[j]] = (typeof objArray[row].items[product][itemProperties[j]] == "undefined" || objArray[row].items[product][itemProperties[j]] == null ? "" : objArray[row].items[product][itemProperties[j]]);
+    //             // }
+    //             resArray.push(testrun);
+    //         }
+    //     }
+    //
+    //     return resArray;
+    // }
 
-        for(var row in objArray) {
-            for(var product in objArray[row].items) {
-                var testrun = {};
-                for(var i=0; i<properties.length; i++) {
-                    testrun[propertyLabels[i]] = (typeof objArray[row][properties[i]] == "undefined" || objArray[row][properties[i]] == null ? "" : objArray[row][properties[i]]);
-                }
-                // for(var j=0; j<itemProperties.length; j++) {
-                //     testrun[itemPropertyLabels[j]] = (typeof objArray[row].items[product][itemProperties[j]] == "undefined" || objArray[row].items[product][itemProperties[j]] == null ? "" : objArray[row].items[product][itemProperties[j]]);
-                // }
-                resArray.push(testrun);
-            }
-        }
-
-        return resArray;
-    }
-
-    function ConvertToCSV(objArray) {
-        objArray = preprocessor(objArray);
-        var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-        var str = '';
-        var row = "";
-        for (var index in objArray[0]) {
-            row += index + ',';
-        }
-        row = row.slice(0, -1);
-        str += row + '\r\n';
-        for (var i = 0; i < array.length; i++) {
-            var line = '';
-            for (var index in array[i]) {
-                if (line != '')
-                    line += ',';
-                line += array[i][index];
-            }
-            str += line + '\r\n';
-        }
-        return str;
-    }
+    // function ConvertToCSV(objArray) {
+    //     objArray = preprocessor(objArray);
+    //     var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    //     var str = '';
+    //     var row = "";
+    //     for (var index in objArray[0]) {
+    //         row += index + ',';
+    //     }
+    //     row = row.slice(0, -1);
+    //     str += row + '\r\n';
+    //     for (var i = 0; i < array.length; i++) {
+    //         var line = '';
+    //         for (var index in array[i]) {
+    //             if (line != '')
+    //                 line += ',';
+    //             line += array[i][index];
+    //         }
+    //         str += line + '\r\n';
+    //     }
+    //     return str;
+    // }
 
     function HomeController($location, toaster, repository) {
         var vm = this;
@@ -66,6 +66,11 @@
             { id: 'selected', label: "Show only selected dancers..." },
             { id: 'all', label: "Show all dancers" }
         ];
+
+        vm.testruns = [];
+        repository.getTestruns({}).then(function (result) {
+            console.log(result);
+        });
 
         vm.selectDancers = [];
         repository.getMasterData().then(function (result) {
@@ -113,22 +118,6 @@
                 vm.testruns = result.data;
             });
         }
-
-        // vm.add = function () {
-        //     $location.path("/bill/add/");
-        // };
-
-        // vm.addMaster = function () {
-        //     $location.path("/bill/add-master/");
-        // };
-
-        // vm.details = function (id) {
-        //     $location.path("/bill/details/" + id);
-        // };
-
-        // vm.remove = function (id) {
-        //     $location.path("/bill/remove/" + id);
-        // };
     }
 
 })(angular.module("coachingDashboard"));
