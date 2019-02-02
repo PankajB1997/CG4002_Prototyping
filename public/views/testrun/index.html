@@ -45,15 +45,21 @@
                 <div class="col-md-8">
                     <div class="container">
                         <div class="row">
-                            <div class="container">
-                                <h3><b id ="metrics-caption"></b></h3>
-                            </div>
+                            <h3><b id ="metrics-caption"></b></h3>
                         </div>
                         <div class="row" ng-repeat="metric in vm.metrics">
                             <div class="col-md-1" ng-click="$parent.selected = $index"><h4><b>{{ $index+1 }}.</b></h4></div>
                             <div class="col-md-5"><h4><b>{{ metric.name }}</b></h4></div>
                             <div class="col-md-1"><h4><b>:</b></h4></div>
                             <div class="col-md-5"><font color="red"><h4><b>{{ metric.value }}</b></h4></font></div>
+                        </div>
+                        <div class="row">
+                            <br />
+                            <h3><b id ="confusing-moves-caption"></b></h3>
+                        </div>
+                        <div class="row" ng-repeat="move in vm.confusing_moves">
+                            <div class="col-md-1" ng-click="$parent.selected = $index"><h4><b>{{ $index+1 }}.</b></h4></div>
+                            <div class="col-md-11"><h4>{{ move }}</h4></div>
                         </div>
                     </div>
                 </div>

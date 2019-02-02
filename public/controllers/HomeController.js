@@ -54,6 +54,10 @@
         }
     }
 
+    function determineTopConfusingMoves(testruns) {
+        return ["Chicken", "Turnclap", "Wipers"];
+    }
+
     // Method to draw accuracy chart
     function drawChart(data) {
         document.getElementById("accuracy-chart-caption").innerText = "Accuracy Chart";
@@ -141,7 +145,9 @@
         analytics.push({ name: "Average energy", value: results.avg_energy.toString() + " J" });
         drawChart(results.accuracy_per_testrun);
         document.getElementById("metrics-caption").innerText = "Metrics";
-        return analytics;
+        var confusing_moves = determineTopConfusingMoves(testruns);
+        document.getElementById("confusing-moves-caption").innerText = "(Upto) Top 3 Confusing Moves";
+        return { analytics: analytics, confusing_moves: confusing_moves };
     }
 
     function HomeController($location, toaster, repository) {
@@ -159,7 +165,9 @@
         ];
 
         repository.getTestruns({}).then(function (result) {
-            vm.metrics = runAnalytics(combiner(result.data));
+            var results = runAnalytics(combiner(result.data));
+            vm.metrics = results.analytics;
+            vm.confusing_moves = results.confusing_moves;
         });
 
         vm.selectDancers = [];
@@ -196,7 +204,9 @@
             //     filters.dancers = null;
             // }
             repository.getTestruns(filters).then(function (result) {
-                vm.metrics = runAnalytics(combiner(result.data));
+                var results = runAnalytics(combiner(result.data));
+                vm.metrics = results.analytics;
+                vm.confusing_moves = results.confusing_moves;
             });
         };
 
