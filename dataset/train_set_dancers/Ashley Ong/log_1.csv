@@ -19,7 +19,6 @@ timestamp,action,goal,time_delta,correct,voltage,current,power,cumpower
 1540279862,turnclap,turnclap,4.599034071,TRUE,5.04,0.25,1.26,210
 1540279871,sidestep,sidestep,9.200862169,TRUE,5.04,0.25,1.27,220
 1540279876,number7,number7,4.557613134,TRUE,5.04,0.25,1.29,220
-,,,5.500671232,,,,,
 1540280101,chicken,chicken,5.648985624,TRUE,5.06,0.25,1.26,90
 1540280106,wipers,wipers,4.583235979,TRUE,5.15,0.25,1.31,90
 1540280110,number7,number7,4.527943373,TRUE,5.13,0.25,1.28,100
@@ -40,4 +39,3 @@ timestamp,action,goal,time_delta,correct,voltage,current,power,cumpower
 1540280192,chicken,chicken,3.012312651,TRUE,5.07,0.25,1.27,210
 1540280197,wipers,wipers,4.584602356,TRUE,5.07,0.25,1.28,210
 1540280202,turnclap,turnclap,4.628445625,TRUE,5.06,0.25,1.29,220
-,,,5.303337431,,,,,

@@ -5,33 +5,53 @@
 
     HomeController.$inject = ["$location", "toaster", "RepositoryService"];
 
+    // Initialise constants mapping to various column indices (zero-based) in the testrun csv file
+    const PREDICTION_TIME_IDX = 3;
+    const ACCURACY_IDX = 4;
+    const VOLTAGE_IDX = 5;
+    const CURRENT_IDX = 6;
+    const POWER_IDX = 7;
+    const ENERGY_IDX = 8;
+
     // Returns overall accuracy across all testruns as well as a list of accuracy values corresponding to each testrun
-    function calculateAccuracyFigures(testruns) {
-        // Initialise constant to store column index at which all true/false values are stored for each testrun
-        const ACCURACY_IDX = 4;
-        // Initialise variable to store the counts of True and False across individual testruns
+    function calculateMetrics(testruns) {
         var accuracies = [];
-        var total_true_count = 0;
-        var total_false_count = 0;
-        var val, true_count, false_count, accuracy, overall_accuracy;
+        var true_count, false_count, total_true_count = 0, total_false_count = 0;
+        var correct, accuracy, overall_accuracy;
+        var total_prediction_time = 0, total_voltage = 0, total_current = 0, total_power = 0, total_energy = 0;
+        var total_count = 0;
         for (var row in testruns) {
             true_count = 0;
             false_count = 0;
             for (var i=1; i<testruns[row].length; i++) {
-                val = testruns[row][i][ACCURACY_IDX].toLowerCase().trim();
-                if (val === "true") {
+                correct = testruns[row][i][ACCURACY_IDX].toLowerCase().trim();
+                if (correct === "true") {
                     true_count += 1;
                 } else {
                     false_count += 1;
                 }
+                total_prediction_time += parseFloat(testruns[row][i][PREDICTION_TIME_IDX].trim());
+                total_voltage += parseFloat(testruns[row][i][VOLTAGE_IDX].trim());
+                total_current += parseFloat(testruns[row][i][CURRENT_IDX].trim());
+                total_power += parseFloat(testruns[row][i][POWER_IDX].trim());
+                total_energy += parseFloat(testruns[row][i][ENERGY_IDX].trim());
             }
             accuracy = Math.round(((true_count*100.0)/(false_count + true_count)) * 100) / 100;
             accuracies.push(accuracy);
             total_true_count += true_count;
             total_false_count += false_count;
+            total_count += testruns[row].length - 1;
         }
         overall_accuracy = Math.round(((total_true_count*100.0)/(total_false_count + total_true_count)) * 100) / 100;
-        return { overall_accuracy: overall_accuracy, accuracy_per_testrun: accuracies }
+        return {
+            overall_accuracy: overall_accuracy,
+            accuracy_per_testrun: accuracies,
+            avg_prediction_time: Math.round((total_prediction_time/total_count) * 100) / 100,
+            avg_voltage: Math.round((total_voltage/total_count) * 100) / 100,
+            avg_current: Math.round((total_current/total_count) * 100) / 100,
+            avg_power: Math.round((total_power/total_count) * 100) / 100,
+            avg_energy: Math.round((total_energy/total_count) * 100) / 100
+        }
     }
 
     // Method to draw accuracy chart
@@ -93,6 +113,7 @@
         for (var dancer in data) {
             testruns = testruns.concat(data[dancer].data);
         }
+        // TODO: Sort testruns in ascending order of date on which they were added
         return testruns;
     }
 
@@ -110,10 +131,15 @@
     **/
     function runAnalytics(testruns) {
         var analytics = [];
+        var results = calculateMetrics(testruns);
         analytics.push({ name: "Number of test runs", value: testruns.length });
-        var accuracies = calculateAccuracyFigures(testruns);
-        analytics.push({ name: "Overall prediction accuracy", value: accuracies.overall_accuracy.toString() + " %" })
-        drawChart(accuracies.accuracy_per_testrun);
+        analytics.push({ name: "Overall prediction accuracy", value: results.overall_accuracy.toString() + " %" });
+        analytics.push({ name: "Average prediction time per dance move", value: results.avg_prediction_time.toString() + " seconds" });
+        analytics.push({ name: "Average voltage", value: results.avg_voltage.toString() + " V" });
+        analytics.push({ name: "Average current", value: results.avg_current.toString() + " A" });
+        analytics.push({ name: "Average power", value: results.avg_power.toString() + " W" });
+        analytics.push({ name: "Average energy", value: results.avg_energy.toString() + " J" });
+        drawChart(results.accuracy_per_testrun);
         document.getElementById("metrics-caption").innerText = "Metrics";
         return analytics;
     }
@@ -126,8 +152,8 @@
 
         vm.selectLogs = [
             { id: null, label: "Filter data", disabled: true },
-            { id: 'train', label: "Show only training set dancers" },
-            { id: 'test', label: "Show only testing set dancers" },
+            { id: 'Training set dancer', label: "Show only training set dancers" },
+            { id: 'Unseen/test dancer', label: "Show only testing set dancers" },
             { id: 'selected', label: "Show only selected dancers..." },
             { id: 'all', label: "Show all dancers" }
         ];

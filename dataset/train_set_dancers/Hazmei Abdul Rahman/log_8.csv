@@ -22,7 +22,6 @@ timestamp,action,goal,time_delta,correct,voltage,current,power,cumpower
 1540359816,sidestep,sidestep,6.133870602,TRUE,0.58,0.27,0.16,50
 1540359821,wipers,wipers,4.49508667,TRUE,0.58,0.27,0.16,50
 1540359827,turnclap,turnclap,6.132120132,TRUE,0.58,0.27,0.16,50
-,,,,,,,,
 1540360145,sidestep,sidestep,5.195758343,TRUE,0.56,0.26,0.15,40
 1540360150,turnclap,turnclap,4.386404991,TRUE,0.56,0.26,0.15,40
 1540360155,number7,number7,4.738152742,TRUE,0.56,0.26,0.15,40
