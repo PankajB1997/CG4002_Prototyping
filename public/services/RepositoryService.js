@@ -43,8 +43,8 @@
 
         function createTestrun(model) {
             return Upload.upload({
-                url: [apiUrl, "testrun"].join("/"), //webAPI exposed to upload the file
-                data:{ csvfile: model.file, dancer: model.dancer } //pass file as data, should be user ng-model
+                url: [apiUrl, "testrun"].join("/"), // webAPI exposed to upload the file
+                data:{ csvfile: model.file, dancer: model.dancer } // pass file as data, should be user ng-model
             });
         };
 

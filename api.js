@@ -1,7 +1,8 @@
 function api (app) {
     const mongojs = require("mongojs");
-    const csv = require('csvtojson');
+    const papa = require('papaparse');
     const multer = require('multer');
+    const stream = require('stream');
     const uploadService = multer({ storage : multer.memoryStorage(), limits: { fileSize: 1000 * 1000 * 20 } }).single('csvfile');
 
     const DATABASE_USERNAME = process.env.CG4002_DATABASE_USERNAME
@@ -9,149 +10,91 @@ function api (app) {
 
     var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data"]);
 
-    // days = [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
-    // months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
-
-    function csv_to_json(csv) {
-        var lines = csv.split("\n");
-        var result = [];
-        var headers = lines[0].split(",");
-        for (var i = 1; i < lines.length; i++) {
-            var obj = {};
-            var currentline = lines[i].split(",");
-            for (var j = 0; j < headers.length; j++) {
-                obj[headers[j]] = currentline[j];
-            }
-            result.push(obj);
-        }
-        return JSON.stringify(result); //JSON
-    }
-
+    // Fetch testrun data by dancer name
     app.get("/api/testrun", function (request, response) {
         var pageSize = request.query.pageSize ? parseInt(request.query.pageSize) : 1000;
-
         var find = {};
-
-        if (request.query.vendorName) {
-            find.vendorName = new RegExp(request.query.vendorName, "i");
+        if (request.query.dancer) {
+            find.dancer = new RegExp(request.query.dancer, "i");
         }
-
-        var result = db.testrun_data.find(find).sort({ "billDate": -1 }).limit(pageSize, function (err, docs) {
-            // for (var i = 0; i < docs.length; i++) {
-            //     docs[i]["billDate"] = docs[i]["billDate"].toISOString();
-            // }
-            // docs.sort(function(a, b) {
-            //     a = new Date(a.billDate);
-            //     b = new Date(b.billDate);
-            //     return a>b ? -1 : a<b ? 1 : 0;
-            //     // return b - a;
-            // });
-            // console.log(docs);
-            // for (var i = 0; i < docs.length; i++) {
-            //     docs[i]["billDate"] = new Date(docs[i]["billDate"]);
-            // }
-            for (var i = 0; i < docs.length; i++) {
-                if (docs[i]["billDate"]) {
-                    day = (docs[i]["billDate"].getDate() < 10) ? "0" + docs[i]["billDate"].getDate() : docs[i]["billDate"].getDate();
-                    month = ((docs[i]["billDate"].getMonth() + 1) < 10) ? "0" + (docs[i]["billDate"].getMonth() + 1) : (docs[i]["billDate"].getMonth() + 1);
-                    docs[i]["billDate"] = day + "/" + month + "/" + docs[i]["billDate"].getFullYear();
-                }
-            }
+        var result = db.testrun_data.find(find).limit(pageSize, function (err, docs) {
             response.json(docs);
         });
     });
 
+    // Fetch testrun data by testrun id
     app.get("/api/testrun/:id", function (request, response) {
         var id = request.params.id;
-
         db.testrun_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
-            // fulldate = new Date(doc["date"]);
-            // day = days[fulldate.getDay()];
-            // date = fulldate.getDate();
-            // month = months[fulldate.getMonth()];
-            // year = fulldate.getFullYear();
-            // hours = fulldate.getHours();
-            // minutes = fulldate.getMinutes();
-            // seconds = fulldate.getSeconds();
-            // ampm = (hours >= 12) ? "PM" : "AM";
-            // hours = (hours > 12) ? hours - 12 : (hours == 0 ? 12 : hours);
-            // hours = (hours < 10) ? "0" + hours : hours;
-            // minutes = (minutes < 10) ? "0" + minutes : minutes;
-            // seconds = (seconds < 10) ? "0" + seconds : seconds;
-            // doc["date"] = day + ", " + date + "-" + month + "-" + year + ", " + hours + ":" + minutes + ":" + seconds + " " + ampm;
-            if (doc["billDate"]) {
-                day = (doc["billDate"].getDate() < 10) ? "0" + doc["billDate"].getDate() : doc["billDate"].getDate();
-                month = ((doc["billDate"].getMonth() + 1) < 10) ? "0" + (doc["billDate"].getMonth() + 1) : (doc["billDate"].getMonth() + 1);
-                doc["billDate"] = day + "/" + month + "/" + doc["billDate"].getFullYear();
-            }
             response.json(doc);
         });
     });
 
     app.post("/api/testrun", uploadService, function (request, response, next) {
-        request.body.file = request.file;
-        // TODO: CSV TO JSON
-        console.log(request.body);
-        // TODO: APPEND THIS JSON TO EXISTING RECORD FOR THIS DANCER
-        db.testrun_data.insert(request.body, function (err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            response.json(doc);
+        // Convert Node file buffer object into a stream object so as to make it readable by PapaParser API
+        var bufferStream = new stream.PassThrough();
+        bufferStream.end(request.file.buffer);
+        // Parse CSV Buffer Stream into a JSON object
+        papa.parse(bufferStream, {
+            complete: function(results) {
+                // Append this testrun data to existing record for this dancer
+                db.testrun_data.findOne({
+                    dancer: request.body.dancer
+                }, function (err, doc) {
+                    if (err)
+                        console.log("Error: " + err);
+                    // // Instead of combining data from different testruns, store them as individual arrays of data
+                    // if (doc.data.length > 0) {
+                    //    results.data = results.data.slice(1, results.data.length);
+                    // }
+                    // doc.data = doc.data.concat(results.data);
+                    doc.data.push(results.data);
+                    db.testrun_data.findAndModify({
+                        query: {
+                            _id: doc._id
+                        },
+                        update: {
+                            $set: {
+                                dancer: doc.dancer,
+                                data: doc.data
+                            }
+                        },
+                        new: true
+                    }, function (err_t, doc_t) {
+                        if (err_t)
+                            console.log("Error: " + err_t);
+                        // console.log(doc_t.data.length);
+                        response.json(doc_t);
+                    });
+                });
+            }
         });
-        // csv().fromFile(request.file).subscribe((json)=>{
-        //     return new Promise((resolve,reject)=>{
-        //         date = new Date(Date.now());
-        //         request.body["date"] = date.toISOString();
-        //         if (request.body["date"]) {
-        //             var dmy = request.body["date"].split("/");
-        //             request.body["date"] = new Date(dmy[2], dmy[1]-1, dmy[0]);
-        //         }
-        //         request.body["file"] = json;
-        //         console.log(request.body);
-        //         db.testrun_data.insert(request.body, function (err, doc) {
-        //             if (err)
-        //                 console.log("Error: " + err);
-        //             response.json(doc);
-        //         });
-        //     })
-        // });
     });
 
     app.put("/api/testrun/:id", function (request, response) {
         var id = request.params.id;
-        if (request.body["billDate"]) {
-            var billDMY = request.body["billDate"].split("/");
-            request.body["billDate"] = new Date(billDMY[2], billDMY[1]-1, billDMY[0]);
-        }
         db.testrun_data.findAndModify({
             query: {
                 _id: mongojs.ObjectId(id)
             },
             update: {
                 $set: {
-                    vendorName: request.body.vendorName,
-                    billTo: request.body.billTo,
-                    billNo: request.body.billNo,
-                    billDate: request.body.billDate,
-                    items: request.body.items,
-                    totalBillAmount: request.body.totalBillAmount,
-                    totalClaimAmount: request.body.totalClaimAmount,
-                    modeOfPayment: request.body.modeOfPayment,
-                    instrumentNo: request.body.instrumentNo,
-                    paymentStatus: request.body.paymentStatus
+                    dancer: request.body.dancer,
+                    data: request.body.data
                 }
             },
             new: true
         }, function (err, doc) {
+            if (err)
+                console.log("Error: " + err);
             response.json(doc);
         });
     });
 
     app.delete("/api/testrun/:id", function (request, response) {
         var id = request.params.id;
-
         db.testrun_data.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
@@ -180,7 +123,12 @@ function api (app) {
         db.dancer_data.insert(request.body, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
-            response.json(doc);
+            var testrun = {};
+            testrun.dancer = request.body.name + " (" + request.body.type + ")";
+            testrun.data = [];
+            db.testrun_data.insert(testrun, function (err_t, doc_t) {
+                response.json(doc_t);
+            });
         });
     });
 

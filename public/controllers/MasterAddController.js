@@ -37,10 +37,11 @@
 
         function save() {
             repository.addNewMasterData(vm.model).then(function (result) {
+                // console.log(result);
                 $location.path("/master/add");
                 vm.model = {};
-                repository.getMasterData().then(function (result) {
-                    vm.master = result.data;
+                repository.getMasterData().then(function (result_m) {
+                    vm.master = result_m.data;
                 });
             });
         };
