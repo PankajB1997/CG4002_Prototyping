@@ -34,38 +34,7 @@
         return { overall_accuracy: overall_accuracy, accuracy_per_testrun: accuracies }
     }
 
-    // Combine testruns of different dancers into one list
-    function combiner(data) {
-        var testruns = [];
-        for (var dancer in data) {
-            testruns = testruns.concat(data[dancer].data);
-        }
-        return testruns;
-    }
-
-    /***
-     *** Calculate and return the following as a dictionary:
-     *** 1. Number of test runs
-     *** 2. Overall prediction accuracy
-     *** 3. JSON for Accuracy Chart
-     *** 4. Average prediction time per dance move
-     *** 5. (Upto) Top 3 confusing moves with detailed count
-     *** 6. Average Voltage
-     *** 7. Average Current
-     *** 8. Average Power
-     *** 9. Average Energy
-    **/
-    function runAnalytics(testruns) {
-        var analytics = {};
-        analytics.num_testruns = testruns.length;
-        var accuracies = calculateAccuracyFigures(testruns);
-        analytics.overall_accuracy = accuracies.overall_accuracy;
-        analytics.accuracy_chart = accuracies.accuracy_per_testrun;
-        drawChart(analytics.accuracy_chart);
-        console.log(analytics);
-        return analytics;
-    }
-
+    // Method to draw accuracy chart
     function drawChart(data) {
         var labels = [];
         for (var i in data) {
@@ -115,6 +84,36 @@
                 }
             }
         });
+    }
+
+    // Combine testruns of different dancers into one list
+    function combiner(data) {
+        var testruns = [];
+        for (var dancer in data) {
+            testruns = testruns.concat(data[dancer].data);
+        }
+        return testruns;
+    }
+
+    /***
+     *** Calculate and return the following as a dictionary:
+     *** 1. Number of test runs
+     *** 2. Overall prediction accuracy
+     *** 3. JSON for Accuracy Chart
+     *** 4. Average prediction time per dance move
+     *** 5. (Upto) Top 3 confusing moves with detailed count
+     *** 6. Average Voltage
+     *** 7. Average Current
+     *** 8. Average Power
+     *** 9. Average Energy
+    **/
+    function runAnalytics(testruns) {
+        var analytics = [];
+        analytics.push({ name: "Number of test runs", value: testruns.length });
+        var accuracies = calculateAccuracyFigures(testruns);
+        analytics.push({ name: "Overall prediction accuracy", value: accuracies.overall_accuracy.toString() + " %" })
+        drawChart(accuracies.accuracy_per_testrun);
+        return analytics;
     }
 
     function HomeController($location, toaster, repository) {

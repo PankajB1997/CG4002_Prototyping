@@ -13,7 +13,7 @@
                     </div>
 
                     <div class="form-group">
-                        <input type="text" name="x_val" class="form-control" placeholder="Recent X testruns" ng-model="vm.filter.x_val" />
+                        <input type="text" name="x_val" class="form-control" placeholder="Recent X testruns only" ng-model="vm.filter.x_val" />
                     </div>
 
                     &nbsp;
@@ -40,6 +40,14 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-8">
+                    <div class="container">
+                        <div class="row" ng-repeat="metric in vm.metrics">
+                            <div class="col-md-1" ng-click="$parent.selected = $index"><h4><b>{{ $index+1 }}.</b></h4></div>
+                            <div class="col-md-5"><h4><b>{{ metric.name }}</b></h4></div>
+                            <div class="col-md-1"><h4><b>:</b></h4></div>
+                            <div class="col-md-5"><font color="red"><h4><b>{{ metric.value }}</b></h4></font></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <center><h4><b>Accuracy Chart</b></h4></center>
