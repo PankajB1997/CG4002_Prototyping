@@ -5,50 +5,32 @@
 
     HomeController.$inject = ["$location", "toaster", "RepositoryService"];
 
-    // function preprocessor(objArray) {
-    //     var resArray = [];
-    //     var properties = ["x_val", "selectDancer", "selectLog"];
-    //     var propertyLabels = ["X_VAL", "DANCER", "LOG"];
-    //     // var itemProperties = ["itemDescription", "quantity", "billingUnit", "rate", "billing", "gst", "billAmount", "rateDifference", "claimAmount"];
-    //     // var itemPropertyLabels = ["PRODUCT", "QTY", "BILLING UNIT", "RATE", "BILLING", "GST", "BILL AMOUNT", "RATE DIFF", "CLAIM AMT"];
-    //
-    //     for(var row in objArray) {
-    //         for(var product in objArray[row].items) {
-    //             var testrun = {};
-    //             for(var i=0; i<properties.length; i++) {
-    //                 testrun[propertyLabels[i]] = (typeof objArray[row][properties[i]] == "undefined" || objArray[row][properties[i]] == null ? "" : objArray[row][properties[i]]);
-    //             }
-    //             // for(var j=0; j<itemProperties.length; j++) {
-    //             //     testrun[itemPropertyLabels[j]] = (typeof objArray[row].items[product][itemProperties[j]] == "undefined" || objArray[row].items[product][itemProperties[j]] == null ? "" : objArray[row].items[product][itemProperties[j]]);
-    //             // }
-    //             resArray.push(testrun);
-    //         }
-    //     }
-    //
-    //     return resArray;
-    // }
-
-    // function ConvertToCSV(objArray) {
-    //     objArray = preprocessor(objArray);
-    //     var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-    //     var str = '';
-    //     var row = "";
-    //     for (var index in objArray[0]) {
-    //         row += index + ',';
-    //     }
-    //     row = row.slice(0, -1);
-    //     str += row + '\r\n';
-    //     for (var i = 0; i < array.length; i++) {
-    //         var line = '';
-    //         for (var index in array[i]) {
-    //             if (line != '')
-    //                 line += ',';
-    //             line += array[i][index];
-    //         }
-    //         str += line + '\r\n';
-    //     }
-    //     return str;
-    // }
+    // Returns overall accuracy across all testruns as well as a list of accuracy values corresponding to each testrun
+    function calculateAccuracyFigures(testruns) {
+        // Initialise constant to store column index at which all true/false values are stored for each testrun
+        const ACCURACY_IDX = 4;
+        // Initialise variable to store the counts of True and False across individual testruns
+        var accuracies = [];
+        var total_true_count = 0;
+        var total_false_count = 0;
+        var val, true_count, false_count;
+        for (var row in testruns) {
+            true_count = 0;
+            false_count = 0;
+            for (var i=1; i<testruns[row].length; i++) {
+                val = testruns[row][i][ACCURACY_IDX].toLowerCase().trim();
+                if (val === "true") {
+                    true_count += 1;
+                } else {
+                    false_count += 1;
+                }
+            }
+            accuracies.push(((true_count*100.0)/(false_count + true_count)));
+            total_true_count += true_count;
+            total_false_count += false_count;
+        }
+        return { overall_accuracy: ((total_true_count*100.0)/(total_false_count + total_true_count)), accuracy_per_testrun: accuracies }
+    }
 
     // Combine testruns of different dancers into one list
     function combiner(data) {
@@ -63,19 +45,20 @@
      *** Calculate and return the following as a dictionary:
      *** 1. Number of test runs
      *** 2. Overall prediction accuracy
-     *** 3. Average prediction time per dance move
-     *** 4. (Upto) Top 3 confusing moves with detailed count
-     *** 5. Average Voltage
-     *** 6. Average Current
-     *** 7. Average Power
-     *** 8. Average Energy
-     *** 9. JSON for Accuracy Chart
+     *** 3. JSON for Accuracy Chart
+     *** 4. Average prediction time per dance move
+     *** 5. (Upto) Top 3 confusing moves with detailed count
+     *** 6. Average Voltage
+     *** 7. Average Current
+     *** 8. Average Power
+     *** 9. Average Energy
     **/
     function runAnalytics(testruns) {
-        console.log(testruns);
         var analytics = {};
         analytics.num_testruns = testruns.length;
-
+        var accuracies = calculateAccuracyFigures(testruns);
+        analytics.overall_accuracy = accuracies.overall_accuracy;
+        analytics.accuracy_chart = accuracies.accuracy_per_testrun;
         return analytics;
     }
 
@@ -84,10 +67,6 @@
         vm.testruns = [];
         vm.metrics = {};
         vm.filter = {};
-
-        repository.getTestruns(vm.filter).then(function (result) {
-            vm.testruns = result.data;
-        });
 
         vm.selectLogs = [
             { id: null, label: "Filter data", disabled: true },
