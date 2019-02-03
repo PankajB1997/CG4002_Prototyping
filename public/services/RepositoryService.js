@@ -26,11 +26,14 @@
             if (fields.pageSize) {
                 queryString.push("pageSize=" + fields.pageSize);
             }
-            if (fields.logType) {
-                queryString.push("logType=" + fields.logType);
+            if (fields.selectLog == "Show only testing set dancers") {
+                queryString.push("log=(Unseen/test dancer)");
             }
-            if (fields.logType == "selected" && fields.dancers) {
-                queryString.push("dancers=" + fields.dancers); // fix this
+            else if (fields.selectLog == "Show only training set dancers") {
+                queryString.push("log=(Training set dancer)");
+            }
+            else if (fields.selectLog == "Show only selected dancers..." && fields.selectDancer !== "Select Dancer(s)") {
+                queryString.push("dancers=" + fields.selectDancer);
             }
             var url = [apiUrl, "testrun"].join("/");
             var fullUrl = queryString.length == 0 ? url : [url, "?", queryString.join("&")].join("");

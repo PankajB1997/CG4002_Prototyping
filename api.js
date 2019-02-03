@@ -10,25 +10,37 @@ function api (app) {
 
     var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data"]);
 
+    // Combine testruns of different dancers into one list
+    function combiner(data, limit) {
+        var testruns = [];
+        for (var dancer in data) {
+            testruns = testruns.concat(data[dancer].data);
+        }
+        // Sort results in order of most recent testruns
+        testruns.sort(function(a, b) {
+            return a.date - b.date;
+        });
+        // Limit results to 'limit' most recent testruns only
+        var results = [];
+        for (var i = Math.max(0, testruns.length - limit); i < testruns.length; i++) {
+            results.push(testruns[i].data);
+        }
+        return results;
+    }
+
     // Fetch testrun data by dancer name
     app.get("/api/testrun", function (request, response) {
         var pageSize = request.query.pageSize ? parseInt(request.query.pageSize) : 1000;
         var find = {};
-        if (request.query.dancer) {
-            find.dancer = new RegExp(request.query.dancer, "i");
+        if (request.query.dancers) {
+            request.query.dancers = request.query.dancers.split(",");
+            find.dancer = { $in: request.query.dancers };
         }
-        var result = db.testrun_data.find(find).limit(pageSize, function (err, docs) {
-            response.json(docs);
-        });
-    });
-
-    // Fetch testrun data by testrun id
-    app.get("/api/testrun/:id", function (request, response) {
-        var id = request.params.id;
-        db.testrun_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            response.json(doc);
+        else if (request.query.log) {
+            find.dancer = { $regex: ".*" + request.query.log + ".*" };
+        }
+        var result = db.testrun_data.find(find, function (err, docs) {
+            response.json(combiner(docs, pageSize));
         });
     });
 
@@ -39,17 +51,14 @@ function api (app) {
         // Parse CSV Buffer Stream into a JSON object
         papa.parse(bufferStream, {
             complete: function(results) {
+                // Add date entry to this record
+                results.data = { date: new Date(), data: results.data };
                 // Append this testrun data to existing record for this dancer
                 db.testrun_data.findOne({
                     dancer: request.body.dancer
                 }, function (err, doc) {
                     if (err)
                         console.log("Error: " + err);
-                    // // Instead of combining data from different testruns, store them as individual arrays of data
-                    // if (doc.data.length > 0) {
-                    //    results.data = results.data.slice(1, results.data.length);
-                    // }
-                    // doc.data = doc.data.concat(results.data);
                     doc.data.push(results.data);
                     db.testrun_data.findAndModify({
                         query: {
@@ -70,6 +79,79 @@ function api (app) {
                     });
                 });
             }
+        });
+    });
+
+    app.get("/api/master", function (request, response) {
+        db.dancer_data.find({}).sort({ name : 1, type: 1 }).toArray(function (err, docs) {
+            if (err)
+                console.log("Error: " + err);
+            response.json(docs);
+        });
+    });
+
+    app.get("/api/master/:id", function (request, response) {
+        var id = request.params.id;
+        db.dancer_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+            if (err)
+                console.log("Error: " + err);
+            response.json(doc);
+        });
+    });
+
+    app.post("/api/master", function (request, response) {
+        request.body.name = request.body.name.replace(/,/g, "").replace(/(Training set dancer)/g, "").replace(/(Unseen\/test dancer)/g, "");
+        if (request.body.name.length > 0) {
+            db.dancer_data.insert(request.body, function (err, doc) {
+                if (err)
+                    console.log("Error: " + err);
+                var testrun = {};
+                testrun.dancer = request.body.name + " (" + request.body.type + ")";
+                testrun.data = [];
+                db.testrun_data.insert(testrun, function (err_t, doc_t) {
+                    response.json(doc_t);
+                });
+            });
+        }
+    });
+
+    app.delete("/api/master/:id", function (request, response) {
+        var id = request.params.id;
+
+        db.dancer_data.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+            if (err)
+                console.log("Error: " + err);
+            response.json(doc);
+        });
+    });
+
+    app.put("/api/master/:id", function (request, response) {
+        var id = request.params.id;
+
+        db.dancer_data.findAndModify({
+            query: {
+                _id: mongojs.ObjectId(id)
+            },
+            update: {
+                $set: {
+                    type: request.body.type,
+                    name: request.body.name
+                }
+            },
+            new: true
+        }, function (err, doc) {
+            response.json(doc);
+        });
+    });
+
+    // Unused endpoints below
+
+    app.get("/api/testrun/:id", function (request, response) {
+        var id = request.params.id;
+        db.testrun_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
+            if (err)
+                console.log("Error: " + err);
+            response.json(doc);
         });
     });
 
@@ -98,65 +180,6 @@ function api (app) {
         db.testrun_data.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
             if (err)
                 console.log("Error: " + err);
-            response.json(doc);
-        });
-    });
-
-    app.get("/api/master", function (request, response) {
-        db.dancer_data.find({}).sort({ name : 1, type: 1 }).toArray(function (err, docs) {
-            if (err)
-                console.log("Error: " + err);
-            response.json(docs);
-        });
-    });
-
-    app.get("/api/master/:id", function (request, response) {
-        var id = request.params.id;
-        db.dancer_data.findOne({ _id: mongojs.ObjectId(id) }, function (err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            response.json(doc);
-        });
-    });
-
-    app.post("/api/master", function (request, response) {
-        db.dancer_data.insert(request.body, function (err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            var testrun = {};
-            testrun.dancer = request.body.name + " (" + request.body.type + ")";
-            testrun.data = [];
-            db.testrun_data.insert(testrun, function (err_t, doc_t) {
-                response.json(doc_t);
-            });
-        });
-    });
-
-    app.delete("/api/master/:id", function (request, response) {
-        var id = request.params.id;
-
-        db.dancer_data.remove({ _id: mongojs.ObjectId(id) }, function (err, doc) {
-            if (err)
-                console.log("Error: " + err);
-            response.json(doc);
-        });
-    });
-
-    app.put("/api/master/:id", function (request, response) {
-        var id = request.params.id;
-
-        db.dancer_data.findAndModify({
-            query: {
-                _id: mongojs.ObjectId(id)
-            },
-            update: {
-                $set: {
-                    type: request.body.type,
-                    name: request.body.name
-                }
-            },
-            new: true
-        }, function (err, doc) {
             response.json(doc);
         });
     });

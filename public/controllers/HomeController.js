@@ -35,7 +35,7 @@
         var energies = [];
         var correct, true_count, false_count, total_true_count = 0, total_false_count = 0;
         var total_prediction_time, total_voltage, total_current, total_power, total_energy;
-        var avg_accuracy;
+        var avg_accuracy, avg_prediction_time, avg_voltage, avg_current, avg_power, avg_energy;
         for (var row in testruns) {
             true_count = false_count = 0;
             total_prediction_time = total_voltage = total_current = total_power = total_energy = 0;
@@ -61,15 +61,21 @@
             total_true_count += true_count;
             total_false_count += false_count;
         }
-        avg_accuracy = Math.round(((total_true_count*100.0)/(total_false_count + total_true_count)) * 100) / 100;
+        // avg_accuracy = Math.round(((total_true_count*100.0)/(total_false_count + total_true_count)) * 100) / 100;
+        avg_accuracy = average(accuracies);
+        avg_prediction_time = average(prediction_times);
+        avg_voltage = average(voltages);
+        avg_current = average(currents);
+        avg_power = average(powers);
+        avg_energy = average(energies);
         return {
             accuracy_per_testrun: accuracies,
-            avg_accuracy: avg_accuracy,
-            avg_prediction_time: average(prediction_times),
-            avg_voltage: average(voltages),
-            avg_current: average(currents),
-            avg_power: average(powers),
-            avg_energy: average(energies)
+            avg_accuracy: (avg_accuracy !== avg_accuracy) ? 0 : avg_accuracy,
+            avg_prediction_time: (avg_prediction_time !== avg_prediction_time) ? 0 : avg_prediction_time,
+            avg_voltage: (avg_voltage !== avg_voltage) ? 0 : avg_voltage,
+            avg_current: (avg_current !== avg_current) ? 0 : avg_current,
+            avg_power: (avg_power !== avg_power) ? 0 : avg_power,
+            avg_energy: (avg_energy !== avg_energy) ? 0 : avg_energy
         }
     }
 
@@ -184,16 +190,6 @@
         });
     }
 
-    // Combine testruns of different dancers into one list
-    function combiner(data) {
-        var testruns = [];
-        for (var dancer in data) {
-            testruns = testruns.concat(data[dancer].data);
-        }
-        // TODO: Sort testruns in ascending order of date on which they were added
-        return testruns;
-    }
-
     /***
      *** Calculate and return the following as a dictionary:
      *** 1. Number of test runs
@@ -217,9 +213,17 @@
         analytics.push({ name: "Average current", value: results.avg_current.toString() + " A" });
         analytics.push({ name: "Average power", value: results.avg_power.toString() + " W" });
         analytics.push({ name: "Average energy", value: results.avg_energy.toString() + " J" });
+
         drawChart(results.accuracy_per_testrun);
+
         var confusing_moves = determineTopConfusingMoves(testruns);
-        document.getElementById("confusing-moves-caption").innerText = "Top Confusing Moves";
+        if (confusing_moves.length > 0)
+            document.getElementById("confusing-moves-caption").innerText = "Top Confusing Moves";
+        else if (parseInt(results.avg_accuracy) != 100 || results.avg_accuracy !== results.avg_accuracy)
+            document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves, but 'none' was sent for some moves";
+        else
+            document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves yet!";
+
         return { analytics: analytics, confusing_moves: confusing_moves };
     }
 
@@ -238,8 +242,7 @@
         ];
 
         repository.getTestruns({}).then(function (result) {
-            console.log(result.data);
-            var results = runAnalytics(combiner(result.data));
+            var results = runAnalytics(result.data);
             vm.metrics = results.analytics;
             vm.confusing_moves = results.confusing_moves;
         });
@@ -261,24 +264,9 @@
             vm.filter.selectLog = vm.selectLogs[0].label;
         });
 
-        vm.filter = function () {
-            var filters = {};
-            // filters.pageSize = vm.filter.x_val;
-            // for (logType in vm.selectLogs) {
-            //     if (vm.filter.selectLog == vm.selectLogs[logType].label) {
-            //         filters.logType = vm.selectLogs[logType].id;
-            //         break;
-            //     }
-            // }
-            // if (filters.logType == "selected") {
-            //     // Fix?
-            //     filters.dancers = vm.filter.selectDancer;
-            // }
-            // else {
-            //     filters.dancers = null;
-            // }
-            repository.getTestruns(filters).then(function (result) {
-                var results = runAnalytics(combiner(result.data));
+        vm.search = function () {
+            repository.getTestruns(vm.filter).then(function (result) {
+                var results = runAnalytics(result.data);
                 vm.metrics = results.analytics;
                 vm.confusing_moves = results.confusing_moves;
             });
