@@ -2,7 +2,8 @@ var module = angular.module("coachingDashboard", [
     "ngRoute",
     "ngAnimate",
     "toaster",
-    "ngFileUpload"
+    "ngFileUpload",
+    "localytics.directives"
 ]);
 
 (function (app) {

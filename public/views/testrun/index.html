@@ -8,8 +8,8 @@
                         <select class="form-control" name="selectLog" ng-model="vm.filter.selectLog" ng-options="item.label as item.label disable when item.disabled for item in vm.selectLogs"></select>
                     </div>
 
-                    <div class="form-group">
-                        <select multiple class="form-control" name="selectDancer" ng-model="vm.filter.selectDancer" ng-options="item.label as item.label disable when item.disabled for item in vm.selectDancers"></select>
+                    <div class="form-group" id="div-list-dancers">
+                        <select chosen multiple id="list-dancers" class="form-control" data-placeholder="Select Dancer(s)" name="selectDancer" ng-model="vm.filter.selectDancer" ng-options="item.label as item.label disable when item.disabled for item in vm.selectDancers"></select>
                     </div>
 
                     <div class="form-group">
@@ -75,3 +75,7 @@
     </div>
 </div>
 </center>
+
+<script>
+    $("#list-dancers").chosen({ width: "350px" });
+</script>

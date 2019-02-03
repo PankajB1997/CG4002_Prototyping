@@ -14,7 +14,6 @@
     const CURRENT_IDX = 6;
     const POWER_IDX = 7;
     const ENERGY_IDX = 8;
-    const ACTUAL_MOVES = ["chicken", "cowboy", "mermaid", "number7", "numbersix", "salute", "sidestep", "swing", "turnclap", "wipers"];
 
     // Method to return average of a list of numbers
     function average(list) {
@@ -259,8 +258,8 @@
             for (var val in vm.selectDancers) {
                 vm.selectDancers[val] = { label: vm.selectDancers[val] };
             }
-            vm.selectDancers.unshift({ label: "Select Dancer(s)", "disabled": true });
-            vm.filter.selectDancer = vm.selectDancers[0].label;
+            // vm.selectDancers.unshift({ label: "Select Dancer(s)", "disabled": true });
+            vm.filter.selectDancer = [];
             vm.filter.selectLog = vm.selectLogs[0].label;
         });
 
@@ -274,7 +273,7 @@
 
         vm.clearFilter = function() {
             vm.filter.pageSize = null;
-            vm.filter.selectDancer = vm.selectDancers[0].label;
+            vm.filter.selectDancer = [];
             vm.filter.selectLog = vm.selectLogs[0].label;
             repository.getTestruns({}).then(function (result) {
                 var results = runAnalytics(result.data);
