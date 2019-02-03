@@ -273,11 +273,13 @@
         };
 
         vm.clearFilter = function() {
-            vm.filter.x_val = null;
-            vm.filter.selectDancer = "Select Dancer(s)";
-            vm.filter.selectLog = "Filter logs";
+            vm.filter.pageSize = null;
+            vm.filter.selectDancer = vm.selectDancers[0].label;
+            vm.filter.selectLog = vm.selectLogs[0].label;
             repository.getTestruns({}).then(function (result) {
-                vm.testruns = result.data;
+                var results = runAnalytics(result.data);
+                vm.metrics = results.analytics;
+                vm.confusing_moves = results.confusing_moves;
             });
         }
     }
