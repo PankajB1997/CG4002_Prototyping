@@ -6,12 +6,15 @@
     HomeController.$inject = ["$location", "toaster", "RepositoryService"];
 
     // Initialise constants mapping to various column indices (zero-based) in the testrun csv file
+    const PREDICTED_MOVE_IDX = 1;
+    const ACTUAL_MOVE_IDX = 2;
     const PREDICTION_TIME_IDX = 3;
     const ACCURACY_IDX = 4;
     const VOLTAGE_IDX = 5;
     const CURRENT_IDX = 6;
     const POWER_IDX = 7;
     const ENERGY_IDX = 8;
+    const ACTUAL_MOVES = ["chicken", "cowboy", "mermaid", "number7", "numbersix", "salute", "sidestep", "swing", "turnclap", "wipers"];
 
     // Method to return average of a list of numbers
     function average(list) {
@@ -71,7 +74,61 @@
     }
 
     function determineTopConfusingMoves(testruns) {
-        return ["Chicken", "Turnclap", "Wipers"];
+        // Initialise dictionary of the form { ACTUAL_MOVE_1: { PREDICTED_MOVE_1: count, ... }, ... }
+        var moveErrorCounts = [];
+        // Initialise list of dictionaries, with each one of form { move: movename, totalConfusions: count, listOfConfusions: [ { move: move_1, count: count_1 }, ... ] }
+        var confusingMoves = [];
+        var confusingMovesString = [];
+        var actual_move, predicted_move, confusingMove, moveString, moveDict;
+        for (var row in testruns) {
+            for (var i=1; i<testruns[row].length; i++) {
+                actual_move = testruns[row][i][ACTUAL_MOVE_IDX].toLowerCase().trim();
+                predicted_move = testruns[row][i][PREDICTED_MOVE_IDX].toLowerCase().trim();
+                if (actual_move !== predicted_move && predicted_move !== "none") {
+                    if (!(actual_move in moveErrorCounts)) {
+                        moveErrorCounts[actual_move] = {};
+                        moveErrorCounts[actual_move].totalCount = 0;
+                    }
+                    if (!(predicted_move in moveErrorCounts[actual_move])) {
+                        moveErrorCounts[actual_move][predicted_move] = 0;
+                    }
+                    moveErrorCounts[actual_move][predicted_move] += 1;
+                    moveErrorCounts[actual_move].totalCount += 1;
+                }
+            }
+        }
+        for (var key in moveErrorCounts) {
+            confusingMove = {};
+            confusingMove.move = key;
+            confusingMove.totalConfusions = moveErrorCounts[key].totalCount;
+            confusingMove.listOfConfusions = [];
+            for (var move in moveErrorCounts[key]) {
+                if (move !== "totalCount") {
+                    confusingMove.listOfConfusions.push({ move: move, count: moveErrorCounts[key][move] });
+                }
+            }
+            // Sort listOfConfusions by count property of each dict
+            confusingMove.listOfConfusions.sort(function(first, second) {
+                return second.count - first.count;
+            });
+            confusingMoves.push(confusingMove);
+        }
+        // Sort confusingMoves by totalCount property of each dictionary
+        confusingMoves.sort(function(first, second) {
+            return second.totalConfusions - first.totalConfusions;
+        });
+        // Generate string representation of each dict in confusingMoves
+        for (var i in confusingMoves) {
+            moveDict = {};
+            moveDict.move = confusingMoves[i].move;
+            moveDict.string = "confused " + confusingMoves[i].totalConfusions + " times with ";
+            for (var j in confusingMoves[i].listOfConfusions) {
+                moveDict.string += confusingMoves[i].listOfConfusions[j].move + " (" + confusingMoves[i].listOfConfusions[j].count + "), ";
+            }
+            moveDict.string = moveDict.string.substring(0, moveDict.string.length - 2);
+            confusingMovesString.push(moveDict);
+        }
+        return confusingMovesString;
     }
 
     // Method to draw accuracy chart
@@ -143,15 +200,16 @@
      *** 2. Overall prediction accuracy
      *** 3. JSON for Accuracy Chart
      *** 4. Average prediction time per dance move
-     *** 5. (Upto) Top 3 confusing moves with detailed count
-     *** 6. Average Voltage
-     *** 7. Average Current
-     *** 8. Average Power
-     *** 9. Average Energy
+     *** 5. Average Voltage
+     *** 6. Average Current
+     *** 7. Average Power
+     *** 8. Average Energy
+     *** 9. (Upto) Top 3 confusing moves with detailed count
     **/
     function runAnalytics(testruns) {
         var analytics = [];
         var results = calculateMetrics(testruns);
+        document.getElementById("metrics-caption").innerText = "Metrics";
         analytics.push({ name: "Number of test runs", value: testruns.length });
         analytics.push({ name: "Overall prediction accuracy", value: results.avg_accuracy.toString() + " %" });
         analytics.push({ name: "Average prediction time per dance move", value: results.avg_prediction_time.toString() + " seconds" });
@@ -160,9 +218,8 @@
         analytics.push({ name: "Average power", value: results.avg_power.toString() + " W" });
         analytics.push({ name: "Average energy", value: results.avg_energy.toString() + " J" });
         drawChart(results.accuracy_per_testrun);
-        document.getElementById("metrics-caption").innerText = "Metrics";
         var confusing_moves = determineTopConfusingMoves(testruns);
-        document.getElementById("confusing-moves-caption").innerText = "(Upto) Top 3 Confusing Moves";
+        document.getElementById("confusing-moves-caption").innerText = "Top Confusing Moves";
         return { analytics: analytics, confusing_moves: confusing_moves };
     }
 
@@ -181,6 +238,7 @@
         ];
 
         repository.getTestruns({}).then(function (result) {
+            console.log(result.data);
             var results = runAnalytics(combiner(result.data));
             vm.metrics = results.analytics;
             vm.confusing_moves = results.confusing_moves;
