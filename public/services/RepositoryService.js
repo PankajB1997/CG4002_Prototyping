@@ -32,7 +32,7 @@
             else if (fields.selectLog == "Show only training set dancers") {
                 queryString.push("log=(Training set dancer)");
             }
-            else if (fields.selectLog == "Show only selected dancers..." && fields.selectDancer !== "Select Dancer(s)") {
+            else if (fields.selectDancer && fields.selectDancer.length > 0) {
                 queryString.push("dancers=" + fields.selectDancer);
             }
             var url = [apiUrl, "testrun"].join("/");

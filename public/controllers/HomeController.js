@@ -233,11 +233,11 @@
         vm.metrics = {};
 
         vm.selectLogs = [
-            { id: null, label: "Filter data", disabled: true },
-            { id: 'Training set dancer', label: "Show only training set dancers" },
-            { id: 'Unseen/test dancer', label: "Show only testing set dancers" },
-            { id: 'selected', label: "Show only selected dancers..." },
-            { id: 'all', label: "Show all dancers" }
+            { id: null, label: "Filter by dancers' type", disabled: true },
+            { id: 'Training set dancer', label: "Only training set dancers" },
+            { id: 'Unseen/test dancer', label: "Only testing set dancers" },
+            // { id: 'selected', label: "Show only selected dancers..." },
+            // { id: 'all', label: "Show all dancers" }
         ];
 
         repository.getTestruns({}).then(function (result) {
