@@ -26,10 +26,10 @@
             if (fields.pageSize) {
                 queryString.push("pageSize=" + fields.pageSize);
             }
-            if (fields.selectLog == "Show only testing set dancers") {
+            if (fields.selectLog == "Only testing set dancers") {
                 queryString.push("log=(Unseen/test dancer)");
             }
-            else if (fields.selectLog == "Show only training set dancers") {
+            else if (fields.selectLog == "Only training set dancers") {
                 queryString.push("log=(Training set dancer)");
             }
             else if (fields.selectDancer && fields.selectDancer.length > 0) {
