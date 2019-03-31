@@ -7,37 +7,39 @@
     #include "Wire.h"
 #endif
 
-#define STACK_SIZE 200
+#define STACK_SIZE          100
+#define ACCEL_SENSITIVITY   8192
+#define GYRO_SENSITIVITY    250
+#define GRAVITY             9.81
 //#define OUTPUT_READABLE_ACCELGYRO //uncomment to print the values read from the accelerometers
 #define SAMPLE_SIZE 4
 
-MPU6050 accelgyro1(0x68);
-//MPU6050 accelgyro2(0x69);
+#define N                   6   // size of buffer
+#define INITIAL_NUM_SAMPLE  100
+#define SAMPLE_RATE         50  // 50Hz sampling rate
+#define DLPF_MODE           0   // MPU6050 on-board digital low pass filter
+
+// RTOS variables
+float buffer[N];
+int in, out;
+int itemsInBuffer = 0;
+
+// sensor variable
+MPU6050 mpu;
 
 // Handshake Variables
 int handShakeFlag = 0;
 int ackFlag = 0;
 
-// Accel+Gyro1
-int16_t ax1_i, ay1_i, az1_i;
-int16_t gx1_i, gy1_i, gz1_i;
-float ax1, ay1, az1;
-float gx1, gy1, gz1;
+long currmillis = 0;
+long startmillis = 0;
 
-// Accel+Gyro2
-//int16_t ax2_i, ay2_i, az2_i;
-//int16_t gx2_i, gy2_i, gz2_i;
-//float ax2, ay2, az2;
-//float gx2, gy2, gz2;
+int avgAccX = 0;
+int avgAccY = 0;
+int avgAccZ = 0;
 
-// Buffer
-char* ax1Char; char* ay1Char; char* az1Char; char* gx1Char;
-char* gy1Char; char* gz1Char; char dataBuffer[500];
-
-// Checksum
-int checkSum = 0;
-int checkSum2;
-char checksumChar[4];
+SemaphoreHandle_t xSemaphoreProducer = NULL;
+SemaphoreHandle_t xSemaphoreBuffer = NULL;
 
 void connectToPi() {
   Serial.println("Begin Handshaking with RPI.");
@@ -46,88 +48,28 @@ void connectToPi() {
     if (Serial.available()) {
       if (Serial.read() == 'H') {
         handShakeFlag = 1;
-        Serial.write('B');  //send a B to Pi
+        //Serial.write('B');  //send a B to Pi
       }
     }
   }
 
   //Receive Ack from Rpi
-  while (ackFlag == 0) {
-    if (Serial.available()) {
-      int incoming = Serial.read();
-      Serial.println(char(incoming));
-      if (incoming == 'F') {
-        ackFlag = 1;
-      }
-    } else {
-      Serial.write('B');
-      delay(1000);
-    }
-  }
+//  while (ackFlag == 0) {
+//    if (Serial.available()) {
+//      int incoming = Serial.read();
+//      Serial.println(char(incoming));
+//      if (incoming == 'F') {
+//        ackFlag = 1;
+//      }
+//    } else {
+//      Serial.write('B');
+//      delay(1000);
+//    }
+//  }
   Serial.println("Arduino is Ready!");
 
 }
 
-void mainTask(void *p){
-  int incomingByte;
-  unsigned int len;
-  char s[4];
-  TickType_t xLastWakeTime;
-  Serial.println("In main task");
-
-  xLastWakeTime = xTaskGetTickCount();
-  for(;;){
-    if (Serial.available()) {       // Check if message available
-      incomingByte = Serial.read();
-      //Serial.print("Incoming byte is: ");
-      //Serial.println(char(incomingByte));
-    }
-    if(incomingByte == 'H'){ // Reconnect with the Rpi if it disconnects
-      Serial.println("Reconnecting!");
-      handShakeFlag = 0;
-      ackFlag = 0;
-      connectToPi();
-      incomingByte = 0;
-    }
-    if(incomingByte == 'R'){
-      xLastWakeTime = xTaskGetTickCount();
-      strcpy(dataBuffer, ""); //clear the dataBuffer
-
-      //processPower();
-      
-      for (int i = 0; i < SAMPLE_SIZE; i++) {
-        strcat(dataBuffer, "\n");
-        //processAcc();
-        //ACCMessageFormat();
-        vTaskDelayUntil(&xLastWakeTime, (50 / portTICK_PERIOD_MS)); // read acc every 50ms
-      }
-
-      len = strlen(dataBuffer);
-      for (int i = 0; i < len; i++) {
-        checkSum += dataBuffer[i];
-      }
-      Serial.print("Checksum is ");
-      Serial.println(checkSum);
-
-      // check sum
-      checkSum2 = (int)checkSum;
-      itoa(checkSum2, checksumChar, 10);
-      strcat(dataBuffer, ","); 
-      strcat(dataBuffer, checksumChar); //add checksum
-      strcat(dataBuffer, "\r"); //add breaking character
-
-      len = strlen(dataBuffer);
-
-      //Send message to rpi
-      for (int j = 0; j < len + 1; j++) {
-        Serial.write(dataBuffer[j]);
-      }
-
-      incomingByte = 0;
-      checkSum = 0;
-    }
-  }
-}
 
 void setup() {
   Serial.begin(115200);
@@ -141,55 +83,112 @@ void setup() {
 
   // initialize device
   Serial.println("Initializing I2C devices...");
-  accelgyro1.initialize();
-  //accelgyro2.initialize();
+  mpu.initialize();
+  mpu.setRate(SAMPLE_RATE);
+  mpu.setDLPFMode(DLPF_MODE);       // set on-board digital low-pass filter configuration
+  mpu.setFullScaleAccelRange(1);    // 0 = +/- 2g
+                                    // 1 = +/- 4g
+                                    // 2 = +/- 8g
+                                    // 3 = +/- 16g
+  mpu.setFullScaleGyroRange(0);     // FS_SEL | Full Scale Range    | LSB Sensitivity
+                                    // 0      | +/- 250 degrees/s   | 131 LSB/deg/s
+                                    // 1      | +/- 500 degrees/s   | 65.5 LSB/deg/s
+                                    // 2      | +/- 1000 degrees/s  | 32.8 LSB/deg/s
+                                    // 3      | +/- 2000 degrees/s  | 16.4 LSB/deg/s
+
+  // mpu.setXAccelOffset();
+  // mpu.setYAccelOffset();
+  // mpu.setZAccelOffset();
+  // mpu.setXGyroOffset();
+  // mpu.setYGyroOffset();
+  // mpu.setZGyroOffset();
 
   // verify connection
   Serial.println("Testing device connections...");
-  Serial.println(accelgyro1.testConnection() ? "MPU6050 - accelgyro1 connection successful" : "MPU6050 - accelgyro1 connection failed");
-  //Serial.println(accelgyro2.testConnection() ? "MPU6050 - accelgyro2 connection successful" : "MPU6050 - accelgyro2 connection failed");
-
-  // use the code below to change accel/gyro offset values
-  //*
-  Serial.println("Updating internal sensor offsets...");
-  // -76  -2359 1688  0 0 0
-  Serial.println("Accelgyro1: ");
-  Serial.print(accelgyro1.getXAccelOffset()); Serial.print("\t"); // -76
-  Serial.print(accelgyro1.getYAccelOffset()); Serial.print("\t"); // -2359
-  Serial.print(accelgyro1.getZAccelOffset()); Serial.print("\t"); // 1688
-  Serial.print(accelgyro1.getXGyroOffset()); Serial.print("\t"); // 0
-  Serial.print(accelgyro1.getYGyroOffset()); Serial.print("\t"); // 0
-  Serial.print(accelgyro1.getZGyroOffset()); Serial.print("\t"); // 0
-  Serial.print("\n");
-
-  accelgyro1.setXAccelOffset(-3902);
-  accelgyro1.setYAccelOffset(-1052);
-  accelgyro1.setZAccelOffset(1661);
-  accelgyro1.setXGyroOffset(49);
-  accelgyro1.setYGyroOffset(-32);
-  accelgyro1.setZGyroOffset(23);
-
-//  Serial.println("Accelgyro2: ");
-//  Serial.print(accelgyro2.getXAccelOffset()); Serial.print("\t"); // -76
-//  Serial.print(accelgyro2.getYAccelOffset()); Serial.print("\t"); // -2359
-//  Serial.print(accelgyro2.getZAccelOffset()); Serial.print("\t"); // 1688
-//  Serial.print(accelgyro2.getXGyroOffset()); Serial.print("\t"); // 0
-//  Serial.print(accelgyro2.getYGyroOffset()); Serial.print("\t"); // 0
-//  Serial.print(accelgyro2.getZGyroOffset()); Serial.print("\t"); // 0
-//  Serial.print("\n");
-//
-//  accelgyro2.setXAccelOffset(-1705);
-//  accelgyro2.setYAccelOffset(-3766);
-//  accelgyro2.setZAccelOffset(826);
-//  accelgyro2.setXGyroOffset(38);
-//  accelgyro2.setYGyroOffset(-7);
-//  accelgyro2.setZGyroOffset(-3);
-  //*/
+  Serial.println(mpu.testConnection() ? "MPU6050 - accelgyro1 connection successful" : "MPU6050 - accelgyro1 connection failed");
   
   connectToPi();
-  xTaskCreate(mainTask, "Main Task", 400, NULL, 3, NULL);
+  
+  // create semaphores - currently we only have one task
+  xSemaphoreProducer = xSemaphoreCreateBinary();
+  xSemaphoreBuffer = xSemaphoreCreateMutex();
+
+  // give semaphores
+  xSemaphoreGive((xSemaphoreBuffer));
+  xSemaphoreGive((xSemaphoreProducer));
+  
+  // create tasks
+  xTaskCreate(A1Task, "A1", 100, NULL, 3, NULL);
+  xTaskCreate(CommTask, "C", 100, NULL, 2, NULL);
 }
 
 void loop() {
 
+}
+
+// Task for A1
+static void A1Task(void* pvParameter){
+  int16_t ax, ay, az, gx, gy, gz;
+
+  while(1){
+    if((xSemaphoreProducer != NULL) && (xSemaphoreBuffer != NULL)){
+      if((xSemaphoreTake(xSemaphoreProducer, portMAX_DELAY) == pdTRUE) && (xSemaphoreTake(xSemaphoreBuffer, 0) == pdTRUE)){
+        mpu.getAcceleration(&ax, &ay, &az);
+        mpu.getRotation(&gx, &gy, &gz);
+                
+        buffer[in] = (((float)(ax-avgAccX)/ACCEL_SENSITIVITY)*GRAVITY);
+        in = (in+1)%N;
+        buffer[in] = (((float)(ay-avgAccY)/ACCEL_SENSITIVITY)*GRAVITY);
+        in = (in+1)%N;
+        buffer[in] = (((float)(az-avgAccZ)/ACCEL_SENSITIVITY)*GRAVITY);
+        in = (in+1)%N;
+        buffer[in] = (int)((float)gx/GYRO_SENSITIVITY);
+        in = (in+1)%N;
+        buffer[in] = (int)((float)gy/GYRO_SENSITIVITY);
+        in = (in+1)%N;
+        buffer[in] = (int)((float)gz/GYRO_SENSITIVITY);
+        in = (in+1)%N;
+
+        itemsInBuffer += 6;
+                
+        xSemaphoreGive(xSemaphoreBuffer);
+//        xSemaphoreGive(xSemaphoreProducer);
+      }
+      else {
+//        Serial.println("A1: Failed to grab semaphores and start task!");
+      }
+    }
+  }
+}
+
+static void CommTask(void* pvParameters){
+  while(1){
+    if((xSemaphoreBuffer != NULL) && (itemsInBuffer == 6)){
+      if(xSemaphoreTake(xSemaphoreBuffer, 0) == pdTRUE){
+        int i;
+//        Serial.write(START_FLAG);
+//        Serial.write(INBD_DATA);
+//        Serial.write(0b11110001);
+        
+        for(i=0; i<N; i++){
+//          int val = buffer[out];
+//          out = (out+1) % N;
+//          Serial.write(highByte(val));
+//          Serial.write(lowByte(val));
+          Serial.print(buffer[i]);
+          Serial.print(",");
+        }
+        Serial.println();
+
+        itemsInBuffer = 0;
+
+        vTaskDelay(1);
+        xSemaphoreGive(xSemaphoreBuffer);
+        xSemaphoreGive(xSemaphoreProducer);
+      }
+      else {
+//        Serial.println("C: Failed to grab semaphores and start task!");
+      }
+    }
+  }
 }
