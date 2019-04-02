@@ -12,7 +12,6 @@
             document.getElementById("emg-chart-caption").innerText = "EMG Trends";
             document.getElementById("metrics-caption").innerText = "Metrics";
             vm.model = analytics.runAnalytics(result.data, true);
-            console.log(result.data);
         });
 
         /*
@@ -25,7 +24,6 @@
         var intervalListener = $interval(function() {
             repository.getRealTimeData().then(function (result) {
                 vm.model = analytics.runAnalytics(result.data, true);
-                console.log(result.data);
             });
         }, 5000);
 

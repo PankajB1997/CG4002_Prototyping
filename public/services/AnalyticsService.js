@@ -24,12 +24,12 @@
         const LOCATION_DANCER_3_IDX = 11;
 
         // Initialise constants for various keys in real-time data
-        const PREDICTED_MOVE_IDX = 0;
-        const VOLTAGE_IDX = 1;
-        const CURRENT_IDX = 2;
-        const POWER_IDX = 3;
-        const ENERGY_IDX = 4;
-        const EMG_VALUES = 5;
+        const PREDICTED_MOVE_IDX_R = 0;
+        const VOLTAGE_IDX_R = 1;
+        const CURRENT_IDX_R = 2;
+        const POWER_IDX_R = 3;
+        const ENERGY_IDX_R = 4;
+        const EMG_VALUES_R = 5;
 
         // Method to return average of a list of numbers
         function average(list) {
@@ -239,11 +239,11 @@
                     document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves, but 'none' was sent for some moves";
                 else
                     document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves yet!";
+                return { analytics: analytics, confusing_moves: confusing_moves };
             }
             else {
-
+                return {};
             }
-            return { analytics: analytics, confusing_moves: confusing_moves };
         }
 
     };
