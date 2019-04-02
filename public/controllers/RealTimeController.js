@@ -8,6 +8,13 @@
     function RealTimeController($location, $interval, $scope, toaster, repository, analytics) {
         var vm = this;
 
+        repository.getRealTimeData().then(function (result) {
+            document.getElementById("emg-chart-caption").innerText = "EMG Trends";
+            document.getElementById("metrics-caption").innerText = "Metrics";
+            vm.model = analytics.runAnalytics(result.data);
+            console.log(result.data);
+        });
+
         /*
         vm.model should have a JSON with the keys:
             accuracy, avg. prediction time per move, avg. voltage, avg. current,
@@ -18,8 +25,6 @@
 
         var intervalListener = $interval(function() {
             repository.getRealTimeData().then(function (result) {
-                document.getElementById("emg-chart-caption").innerText = "EMG Trends";
-                document.getElementById("metrics-caption").innerText = "Metrics";
                 vm.model = analytics.runAnalytics(result.data);
                 console.log(result.data);
             });
