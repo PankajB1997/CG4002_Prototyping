@@ -188,7 +188,8 @@
                         line: {
                             fill: false
                         }
-                    }
+                    },
+                    animation: false
                 }
             });
         }
