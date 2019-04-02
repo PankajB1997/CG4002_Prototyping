@@ -153,12 +153,13 @@
         }
 
         // Method to draw accuracy/emg chart
+        // data is a list of double type values
         function drawChart(data) {
             var labels = [];
             for (var i in data) {
                 labels.push((parseInt(i)+1).toString());
             }
-            var ctx = document.getElementById('accuracy_chart').getContext('2d');
+            var ctx = document.getElementById('trend_chart').getContext('2d');
             var chart = new Chart(ctx, {
                 type: 'line',
                 data: {
