@@ -8,7 +8,7 @@ function api (app) {
     const DATABASE_USERNAME = process.env.CG4002_DATABASE_USERNAME
     const DATABASE_PASSWORD = process.env.CG4002_DATABASE_PASSWORD
 
-    var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data"]);
+    var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data", "realtime_data"]);
 
     // Combine testruns of different dancers into one list
     function combiner(data, limit) {
@@ -140,6 +140,15 @@ function api (app) {
             },
             new: true
         }, function (err, doc) {
+            response.json(doc);
+        });
+    });
+
+    app.get("/api/realtime", function (request, response) {
+        var id = request.params.id;
+        db.realtime_data.find({}, function (err, doc) {
+            if (err)
+                console.log("Error: " + err);
             response.json(doc);
         });
     });
