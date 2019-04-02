@@ -3,9 +3,9 @@
 
     app.service("AnalyticsService", AnalyticsService);
 
-    AnalyticsService.$inject = ["$log", "$http", "Upload"];
+    AnalyticsService.$inject = [];
 
-    function AnalyticsService($log, $http, Upload) {
+    function AnalyticsService() {
         var svc = this;
 
         svc.runAnalytics = runAnalytics;
