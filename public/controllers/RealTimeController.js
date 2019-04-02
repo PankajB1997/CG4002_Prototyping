@@ -11,21 +11,20 @@
         repository.getRealTimeData().then(function (result) {
             document.getElementById("emg-chart-caption").innerText = "EMG Trends";
             document.getElementById("metrics-caption").innerText = "Metrics";
-            vm.model = analytics.runAnalytics(result.data);
+            vm.model = analytics.runAnalytics(result.data, true);
             console.log(result.data);
         });
 
         /*
         vm.model should have a JSON with the keys:
-            accuracy, avg. prediction time per move, avg. voltage, avg. current,
-            avg. power, avg. energy, top confusing moves and the values for the
-            EMG line chart
+            avg. voltage, avg. current, avg. power, avg. energy,
+            the values for the EMG line chart
         */
         vm.model = {};
 
         var intervalListener = $interval(function() {
             repository.getRealTimeData().then(function (result) {
-                vm.model = analytics.runAnalytics(result.data);
+                vm.model = analytics.runAnalytics(result.data, true);
                 console.log(result.data);
             });
         }, 5000);

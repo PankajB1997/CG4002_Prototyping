@@ -22,7 +22,7 @@
         repository.getTestruns({}).then(function (result) {
             document.getElementById("accuracy-chart-caption").innerText = "Accuracy Chart";
             document.getElementById("metrics-caption").innerText = "Metrics";
-            var results = analytics.runAnalytics(result.data);
+            var results = analytics.runAnalytics(result.data, false);
             vm.metrics = results.analytics;
             vm.confusing_moves = results.confusing_moves;
         });
@@ -47,7 +47,7 @@
         vm.search = function () {
             repository.getTestruns(vm.filter).then(function (result) {
                 console.log(result.data);
-                var results = analytics.runAnalytics(result.data);
+                var results = analytics.runAnalytics(result.data, false);
                 vm.metrics = results.analytics;
                 vm.confusing_moves = results.confusing_moves;
             });
@@ -58,7 +58,7 @@
             vm.filter.selectDancer = [];
             vm.filter.selectLog = vm.selectLogs[0].label;
             repository.getTestruns({}).then(function (result) {
-                var results = analytics.runAnalytics(result.data);
+                var results = analytics.runAnalytics(result.data, false);
                 vm.metrics = results.analytics;
                 vm.confusing_moves = results.confusing_moves;
             });

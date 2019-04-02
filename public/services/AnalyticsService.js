@@ -10,7 +10,7 @@
 
         svc.runAnalytics = runAnalytics;
 
-        // Initialise constants mapping to various column indices (zero-based) in the testrun csv file
+        // Initialise constants mapping to various column indices (zero-based) in the testrun csv files
         const PREDICTED_MOVE_IDX = 1;
         const ACTUAL_MOVE_IDX = 2;
         const PREDICTION_TIME_IDX = 3;
@@ -19,6 +19,17 @@
         const CURRENT_IDX = 6;
         const POWER_IDX = 7;
         const ENERGY_IDX = 8;
+        const LOCATION_DANCER_1_IDX = 9;
+        const LOCATION_DANCER_2_IDX = 10;
+        const LOCATION_DANCER_3_IDX = 11;
+
+        // Initialise constants for various keys in real-time data
+        const PREDICTED_MOVE_IDX = 0;
+        const VOLTAGE_IDX = 1;
+        const CURRENT_IDX = 2;
+        const POWER_IDX = 3;
+        const ENERGY_IDX = 4;
+        const EMG_VALUES = 5;
 
         // Method to return average of a list of numbers
         function average(list) {
@@ -141,7 +152,7 @@
             return confusingMovesString;
         }
 
-        // Method to draw accuracy chart
+        // Method to draw accuracy/emg chart
         function drawChart(data) {
             var labels = [];
             for (var i in data) {
@@ -206,27 +217,32 @@
          *** 8. Average Energy
          *** 9. (Upto) Top 3 confusing moves with detailed count
         **/
-        function runAnalytics(testruns) {
+        function runAnalytics(data, isRealTime) {
             var analytics = [];
-            var results = calculateMetrics(testruns);
-            analytics.push({ name: "Number of test runs", value: testruns.length });
-            analytics.push({ name: "Overall prediction accuracy", value: results.avg_accuracy.toString() + " %" });
-            analytics.push({ name: "Average prediction time per dance move", value: results.avg_prediction_time.toString() + " seconds" });
-            analytics.push({ name: "Average voltage", value: results.avg_voltage.toString() + " V" });
-            analytics.push({ name: "Average current", value: results.avg_current.toString() + " A" });
-            analytics.push({ name: "Average power", value: results.avg_power.toString() + " W" });
-            analytics.push({ name: "Average energy", value: results.avg_energy.toString() + " J" });
+            var confusing_moves = [];
+            console.log(data);
+            if (isRealTime == false) {
+                var results = calculateMetrics(data);
+                console.log(results);
+                analytics.push({ name: "Number of test runs", value: data.length });
+                analytics.push({ name: "Overall prediction accuracy", value: results.avg_accuracy.toString() + " %" });
+                analytics.push({ name: "Average prediction time per dance move", value: results.avg_prediction_time.toString() + " seconds" });
+                analytics.push({ name: "Average voltage", value: results.avg_voltage.toString() + " V" });
+                analytics.push({ name: "Average current", value: results.avg_current.toString() + " A" });
+                analytics.push({ name: "Average power", value: results.avg_power.toString() + " W" });
+                analytics.push({ name: "Average energy", value: results.avg_energy.toString() + " J" });
+                drawChart(results.accuracy_per_testrun);
+                confusing_moves = determineTopConfusingMoves(data);
+                if (confusing_moves.length > 0)
+                    document.getElementById("confusing-moves-caption").innerText = "Top Confusing Moves";
+                else if (parseInt(results.avg_accuracy) != 100 || results.avg_accuracy !== results.avg_accuracy)
+                    document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves, but 'none' was sent for some moves";
+                else
+                    document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves yet!";
+            }
+            else {
 
-            drawChart(results.accuracy_per_testrun);
-
-            var confusing_moves = determineTopConfusingMoves(testruns);
-            if (confusing_moves.length > 0)
-                document.getElementById("confusing-moves-caption").innerText = "Top Confusing Moves";
-            else if (parseInt(results.avg_accuracy) != 100 || results.avg_accuracy !== results.avg_accuracy)
-                document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves, but 'none' was sent for some moves";
-            else
-                document.getElementById("confusing-moves-caption").innerText = "No Confusing Moves yet!";
-
+            }
             return { analytics: analytics, confusing_moves: confusing_moves };
         }
 
