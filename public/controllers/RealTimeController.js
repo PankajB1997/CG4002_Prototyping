@@ -29,6 +29,10 @@
 
         $scope.$on('$destroy', function() {
             $interval.cancel(intervalListener);
+            repository.deleteExistingRealTimeData().then(function (result) {
+                analytics.drawChart([]);
+                vm.model = {};
+            });
         });
 
         $scope.refreshRealTime = function () {
