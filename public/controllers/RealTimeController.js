@@ -25,7 +25,7 @@
             repository.getRealTimeData().then(function (result) {
                 vm.model = analytics.runAnalytics(result.data, true);
             });
-        }, 5000);
+        }, 3500);
 
         $scope.$on('$destroy', function() {
             $interval.cancel(intervalListener);
@@ -33,8 +33,8 @@
 
         $scope.refreshRealTime = function () {
             repository.deleteExistingRealTimeData().then(function (result) {
+                analytics.drawChart([]);
                 vm.model = {};
-                console.log("Done")
             });
         };
     };

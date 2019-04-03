@@ -8,6 +8,7 @@
     function AnalyticsService() {
         var svc = this;
 
+        svc.drawChart = drawChart;
         svc.runAnalytics = runAnalytics;
 
         // Initialise constants mapping to various column indices (zero-based) in the testrun csv files
@@ -24,12 +25,12 @@
         const LOCATION_DANCER_3_IDX = 11;
 
         // Initialise constants for various keys in real-time data
-        const PREDICTED_MOVE_IDX_R = 0;
-        const VOLTAGE_IDX_R = 1;
-        const CURRENT_IDX_R = 2;
-        const POWER_IDX_R = 3;
-        const ENERGY_IDX_R = 4;
-        const EMG_VALUES_R = 5;
+        const PREDICTED_MOVE_IDX_R = 'pre';
+        const VOLTAGE_IDX_R = 'vol';
+        const CURRENT_IDX_R = 'cur';
+        const POWER_IDX_R = 'pow';
+        const ENERGY_IDX_R = 'ene';
+        const EMG_VALUES_R = 'emg';
 
         // Method to return average of a list of numbers
         function average(list) {
@@ -182,7 +183,8 @@
                               color: "#007DFF"
                             },
                             ticks: {
-                                fontColor: "#007DFF"
+                                fontColor: "#007DFF",
+                                display: false
                             }
                         }],
                         yAxes: [{
@@ -206,6 +208,33 @@
             });
         }
 
+        function calculateRealTimeMetrics(data) {
+            var preds = [];
+            var volts = [];
+            var curs = [];
+            var powers = [];
+            var energies = [];
+            var emgs = [];
+
+            for (var i in data) {
+                preds.push(data[i][PREDICTED_MOVE_IDX_R]);
+                volts.push(data[i][VOLTAGE_IDX_R]);
+                curs.push(data[i][CURRENT_IDX_R]);
+                powers.push(data[i][POWER_IDX_R]);
+                energies.push(data[i][ENERGY_IDX_R]);
+                emgs.push(data[i][EMG_VALUES_R]);
+            }
+
+            if (emgs.length > 20) {
+                emgs = emgs.slice(-20);
+            }
+
+            return {
+                'pred': average(preds), 'volts': average(volts), 'curs': average(curs),
+                'powers': average(powers), 'energs': average(energies), 'emg': emgs
+            }
+        }
+
         /***
          *** Calculate and return the following as a dictionary:
          *** 1. Number of test runs
@@ -221,10 +250,8 @@
         function runAnalytics(data, isRealTime) {
             var analytics = [];
             var confusing_moves = [];
-            console.log(data);
             if (isRealTime == false) {
                 var results = calculateMetrics(data);
-                console.log(results);
                 analytics.push({ name: "Number of test runs", value: data.length });
                 analytics.push({ name: "Overall prediction accuracy", value: results.avg_accuracy.toString() + " %" });
                 analytics.push({ name: "Average prediction time per dance move", value: results.avg_prediction_time.toString() + " seconds" });
@@ -243,7 +270,15 @@
                 return { analytics: analytics, confusing_moves: confusing_moves };
             }
             else {
-                return {};
+                var results = calculateRealTimeMetrics(data);
+                drawChart(results['emg']);
+                return [
+                    { 'name': 'Predicted Move', 'value': results['pred'] },
+                    { 'name': 'Average Voltage', 'value': results['volts'] },
+                    { 'name': 'Average Current', 'value': results['curs'] },
+                    { 'name': 'Average Power', 'value': results['powers'] },
+                    { 'name': 'Average Energy', 'value': results['energs'] },
+                ];
             }
         }
 
