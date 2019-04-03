@@ -150,7 +150,7 @@ function api (app) {
         db.realtime_data.find({}).sort({ x: -1 }, function (err, docs) {
             if (err)
                 console.log("Error: " + err);
-            // Remove any real time data older than 20 seconds from the collection
+            // Remove any real time data older than 15 seconds from the collection
             if (docs.length > 40) {
                 var time = Math.floor(Date.now() / 1000) - 15;
                 db.realtime_data.remove({ 'timestamp': { $lt: time } });
