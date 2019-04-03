@@ -153,6 +153,14 @@ function api (app) {
         });
     });
 
+    app.delete("/api/realtime", function (request, response) {
+        db.realtime_data.remove({}, function (err) {
+            if (err)
+                console.log("Error: " + err);
+            response.end("success");
+        });
+    });
+
     // Unused endpoints below
 
     app.get("/api/testrun/:id", function (request, response) {

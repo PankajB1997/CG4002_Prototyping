@@ -21,6 +21,7 @@
         svc.deleteMasterData = deleteMasterData;
         svc.updateMasterData = updateMasterData;
         svc.getRealTimeData = getRealTimeData;
+        svc.deleteExistingRealTimeData = deleteExistingRealTimeData;
 
         function getTestruns(fields) {
             var queryString = [];
@@ -83,6 +84,10 @@
         function getRealTimeData() {
             return $http.get([apiUrl, "realtime"].join("/"));
         };
+
+        function deleteExistingRealTimeData() {
+            return $http.delete([apiUrl, "realtime"].join("/"));
+        }
 
     };
 })(angular.module("coachingDashboard"));

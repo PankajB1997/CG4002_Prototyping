@@ -30,5 +30,12 @@
         $scope.$on('$destroy', function() {
             $interval.cancel(intervalListener);
         });
+
+        $scope.refreshRealTime = function () {
+            repository.deleteExistingRealTimeData().then(function (result) {
+                vm.model = {};
+                console.log("Done")
+            });
+        };
     };
 })(angular.module("coachingDashboard"));
