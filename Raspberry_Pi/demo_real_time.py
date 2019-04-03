@@ -1,4 +1,5 @@
 import os
+import time
 import random
 from time import sleep
 import pymongo
@@ -13,6 +14,7 @@ db.authenticate(DATABASE_USERNAME, DATABASE_PASSWORD)
 
 while(True):
     test_data = {
+        'timestamp': time.time(),
         'pre': random.uniform(-1, 1) + 1.0,
         'vol': random.uniform(-1, 1) + 2.0,
         'cur': random.uniform(-1, 1) + 3.0,
@@ -21,4 +23,4 @@ while(True):
         'emg': random.uniform(-1, 1)
     }
     db.realtime_data.insert(test_data)
-    sleep(1.5)
+    sleep(.5)

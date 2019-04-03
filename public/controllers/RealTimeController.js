@@ -25,7 +25,7 @@
             repository.getRealTimeData().then(function (result) {
                 vm.model = analytics.runAnalytics(result.data, true);
             });
-        }, 3500);
+        }, 2500);
 
         $scope.$on('$destroy', function() {
             $interval.cancel(intervalListener);

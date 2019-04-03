@@ -146,10 +146,25 @@ function api (app) {
 
     app.get("/api/realtime", function (request, response) {
         var id = request.params.id;
-        db.realtime_data.find({}, function (err, doc) {
+
+        db.realtime_data.find({}).sort({ x: -1 }, function (err, docs) {
             if (err)
                 console.log("Error: " + err);
-            response.json(doc);
+            // Remove any real time data older than 20 seconds from the collection
+            if (docs.length > 40) {
+                var time = Math.floor(Date.now() / 1000) - 15;
+                db.realtime_data.remove({ 'timestamp': { $lt: time } });
+                // db.realtime_data.remove({ 'timestamp': { $lt: time } }, function (err, doc) {
+                //     if (err)
+                //         console.log("Error: " + err);
+                //     console.log(time);
+                //     console.log(doc);
+                //     docs = docs.slice(-20);
+                //     response.json(docs);
+                // });
+            }
+            docs = docs.slice(-20);
+            response.json(docs);
         });
     });
 

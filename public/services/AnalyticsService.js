@@ -25,7 +25,6 @@
         const LOCATION_DANCER_3_IDX = 11;
 
         // Initialise constants for various keys in real-time data
-        const PREDICTED_MOVE_IDX_R = 'pre';
         const VOLTAGE_IDX_R = 'vol';
         const CURRENT_IDX_R = 'cur';
         const POWER_IDX_R = 'pow';
@@ -209,7 +208,6 @@
         }
 
         function calculateRealTimeMetrics(data) {
-            var preds = [];
             var volts = [];
             var curs = [];
             var powers = [];
@@ -217,7 +215,6 @@
             var emgs = [];
 
             for (var i in data) {
-                preds.push(data[i][PREDICTED_MOVE_IDX_R]);
                 volts.push(data[i][VOLTAGE_IDX_R]);
                 curs.push(data[i][CURRENT_IDX_R]);
                 powers.push(data[i][POWER_IDX_R]);
@@ -225,12 +222,8 @@
                 emgs.push(data[i][EMG_VALUES_R]);
             }
 
-            if (emgs.length > 20) {
-                emgs = emgs.slice(-20);
-            }
-
             return {
-                'pred': average(preds), 'volts': average(volts), 'curs': average(curs),
+                'volts': average(volts), 'curs': average(curs),
                 'powers': average(powers), 'energs': average(energies), 'emg': emgs
             }
         }
@@ -273,7 +266,6 @@
                 var results = calculateRealTimeMetrics(data);
                 drawChart(results['emg']);
                 return [
-                    { 'name': 'Predicted Move', 'value': results['pred'] },
                     { 'name': 'Average Voltage', 'value': results['volts'] },
                     { 'name': 'Average Current', 'value': results['curs'] },
                     { 'name': 'Average Power', 'value': results['powers'] },
