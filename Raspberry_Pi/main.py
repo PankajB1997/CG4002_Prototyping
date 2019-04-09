@@ -82,7 +82,7 @@ class RaspberryPi():
         setup_data = b"\x01\x00"
         self.device = btle.Peripheral("0c:b2:b7:46:57:50")
         print("Device 1 connected!")
-        self.device2 = btle.Peripheral("0c:b2:b7:46:E5:D1")
+        self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
         print("Device 2 connected!")
         self.device.setDelegate(MyDelegate())
         writing_port = self.device.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
@@ -104,6 +104,11 @@ class RaspberryPi():
             #Send start signal
             self.dfb1.write(bytes("H", "utf-8"))
             print("H sent")
+            
+            time.sleep(5)
+            
+            self.dfb1.write(bytes("R", "utf-8"))
+            print("R sent")
             
             #print(self.device2.getState())
             
@@ -127,9 +132,9 @@ class RaspberryPi():
                     #time.sleep(0.5)
                     
             while 1:
-                #continue
-                if self.device.waitForNotifications(1.0):
-                    continue
+                continue
+                #if self.device.waitForNotifications(1.0):
+                    #continue
         
         except KeyboardInterrupt:
             sys.exit(1)
