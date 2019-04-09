@@ -45,6 +45,11 @@ var module = angular.module("coachingDashboard", [
                 templateUrl: base + "testrun/remove.html",
                 controller: "RemoveController",
                 controllerAs: "vm"
+            })
+            .when("/realtime", {
+                templateUrl: base + "realtime/index.html",
+                controller: "RealTimeController",
+                controllerAs: "vm"
             });
     });
 })(angular.module("coachingDashboard"));

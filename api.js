@@ -8,7 +8,7 @@ function api (app) {
     const DATABASE_USERNAME = process.env.CG4002_DATABASE_USERNAME
     const DATABASE_PASSWORD = process.env.CG4002_DATABASE_PASSWORD
 
-    var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data"]);
+    var db = mongojs(DATABASE_USERNAME + ":" + DATABASE_PASSWORD + "@ds121674.mlab.com:21674/heroku_qsp32s4v", ["dancer_data", "testrun_data", "sensor_data", "realtime_data"]);
 
     // Combine testruns of different dancers into one list
     function combiner(data, limit) {
@@ -141,6 +141,30 @@ function api (app) {
             new: true
         }, function (err, doc) {
             response.json(doc);
+        });
+    });
+
+    app.get("/api/realtime", function (request, response) {
+        var id = request.params.id;
+
+        db.realtime_data.find({}).sort({ x: -1 }, function (err, docs) {
+            if (err)
+                console.log("Error: " + err);
+            // Remove any real time data older than 15 seconds from the collection
+            if (docs.length > 40) {
+                var time = Math.floor(Date.now() / 1000) - 15;
+                db.realtime_data.remove({ 'timestamp': { $lt: time } });
+            }
+            docs = docs.slice(-20);
+            response.json(docs);
+        });
+    });
+
+    app.delete("/api/realtime", function (request, response) {
+        db.realtime_data.remove({}, function (err) {
+            if (err)
+                console.log("Error: " + err);
+            response.end("success");
         });
     });
 

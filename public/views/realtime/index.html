@@ -1,0 +1,45 @@
+<center>
+<div class="container">
+    <button type="button" class="btn-primary" ng-click="refreshRealTime()">Refresh real-time data</button>
+</div>
+<div class="container" id="analytics-pane">
+    <div class="row">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="container">
+                        <div class="row">
+                            <h3><b id ="metrics-caption"></b></h3>
+                        </div>
+                        <div class="row" ng-repeat="metric in vm.model">
+                            <div class="col-md-1" ng-click="$parent.selected = $index"><h4><b>{{ $index+1 }}.</b></h4></div>
+                            <div class="col-md-5"><h4><b>{{ metric.name }}</b></h4></div>
+                            <div class="col-md-1"><h4><b>:</b></h4></div>
+                            <div class="col-md-5"><font color="red"><h4><b>{{ metric.value }}</b></h4></font></div>
+                        </div>
+                        <div class="row">
+                            <br />
+                            <h3><b id ="confusing-moves-caption"></b></h3>
+                            <br />
+                        </div>
+                        <div class="row" ng-repeat="move in vm.confusing_moves">
+                            <div class="col-md-1" ng-click="$parent.selected = $index"><h4><b>{{ $index+1 }}.</b></h4></div>
+                            <div class="col-md-1"><h4><b>{{ move.move }}</b></h4></div>
+                            <div class="col-md-1"><h4><b>:</b></h4></div>
+                            <div class="col-md-9"><h4><div align="left">{{ move.string }}</div></h4></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <center><h3><b id="emg-chart-caption"></b></h3></center>
+                    <canvas id="trend_chart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</center>
+
+<script>
+    $("#list-dancers").chosen({ width: "350px" });
+</script>
