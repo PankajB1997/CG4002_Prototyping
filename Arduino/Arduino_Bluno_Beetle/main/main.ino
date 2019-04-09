@@ -40,6 +40,8 @@ int avgAccZ = 0;
 
 SemaphoreHandle_t xSemaphoreProducer = NULL;
 SemaphoreHandle_t xSemaphoreBuffer = NULL;
+int readFlag = 0;
+int count = 0;
 
 void connectToPi() {
   Serial.println("Begin Handshaking with RPI.");
@@ -135,7 +137,16 @@ static void A1Task(void* pvParameter){
       if((xSemaphoreTake(xSemaphoreProducer, portMAX_DELAY) == pdTRUE) && (xSemaphoreTake(xSemaphoreBuffer, 0) == pdTRUE)){
         mpu.getAcceleration(&ax, &ay, &az);
         mpu.getRotation(&gx, &gy, &gz);
-                
+        
+        while (readFlag == 0) {
+          if (Serial.available()) {
+            if (Serial.read() == 'R') {
+              readFlag = 1;
+              count = 0;
+            }
+          }
+        }
+
         buffer[in] = (((float)(ax-avgAccX)/ACCEL_SENSITIVITY)*GRAVITY);
         in = (in+1)%N;
         buffer[in] = (((float)(ay-avgAccY)/ACCEL_SENSITIVITY)*GRAVITY);
@@ -149,7 +160,8 @@ static void A1Task(void* pvParameter){
         buffer[in] = (int)((float)gz/GYRO_SENSITIVITY);
         in = (in+1)%N;
 
-        itemsInBuffer += 6;
+        itemsInBuffer += N;
+        count += 1;
                 
         xSemaphoreGive(xSemaphoreBuffer);
 //        xSemaphoreGive(xSemaphoreProducer);
@@ -163,7 +175,7 @@ static void A1Task(void* pvParameter){
 
 static void CommTask(void* pvParameters){
   while(1){
-    if((xSemaphoreBuffer != NULL) && (itemsInBuffer == 6)){
+    if((xSemaphoreBuffer != NULL) && (itemsInBuffer == N)){
       if(xSemaphoreTake(xSemaphoreBuffer, 0) == pdTRUE){
         int i;
 //        Serial.write(START_FLAG);
@@ -179,8 +191,14 @@ static void CommTask(void* pvParameters){
           Serial.print(",");
         }
         Serial.println();
+        Serial.println(count);
+        delay(0.5);
 
         itemsInBuffer = 0;
+        
+        if(count >= 30) {
+          readFlag == 0;
+        }
 
         vTaskDelay(1);
         xSemaphoreGive(xSemaphoreBuffer);
