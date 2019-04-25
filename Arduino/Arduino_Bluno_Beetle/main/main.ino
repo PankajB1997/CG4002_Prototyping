@@ -20,7 +20,7 @@
 #define DLPF_MODE           0   // MPU6050 on-board digital low pass filter
 
 // RTOS variables
-float buffer[N];
+float buffer[30];
 int in, out;
 int itemsInBuffer = 0;
 
@@ -120,17 +120,70 @@ void setup() {
   xSemaphoreGive((xSemaphoreProducer));
   
   // create tasks
-  xTaskCreate(A1Task, "A1", 100, NULL, 3, NULL);
-  xTaskCreate(CommTask, "C", 100, NULL, 2, NULL);
+  //xTaskCreate(A1Task, "A1", 100, NULL, 3, NULL);
+  //xTaskCreate(CommTask, "C", 100, NULL, 2, NULL);
+  xTaskCreate(mainTask, "Main Task", 400, NULL, 3, NULL);
 }
 
 void loop() {
 
 }
 
+void mainTask(void *p) {
+  int incomingByte;
+  unsigned int len;
+  char s[4];
+  TickType_t xLastWakeTime;
+  int16_t ax, ay, az, gx, gy, gz;
+  int bufferCount = 0;
+
+  xLastWakeTime = xTaskGetTickCount();
+  for(;;){
+    if (Serial.available()) {       // Check if message available
+      incomingByte = Serial.read();
+    }
+    if(incomingByte == 'R'){
+      xLastWakeTime = xTaskGetTickCount();
+      memset(buffer, 0.0, 30);
+      bufferCount = 0;
+      for (int i = 0; i < 5; i++) {
+        
+        mpu.getAcceleration(&ax, &ay, &az);
+        mpu.getRotation(&gx, &gy, &gz);
+        buffer[bufferCount] = (((float)(ax-avgAccX)/ACCEL_SENSITIVITY)*GRAVITY);
+        //in = (in+1)%N;
+        bufferCount += 1;
+        buffer[bufferCount] = (((float)(ay-avgAccY)/ACCEL_SENSITIVITY)*GRAVITY);
+        bufferCount += 1;
+        buffer[bufferCount] = (((float)(az-avgAccZ)/ACCEL_SENSITIVITY)*GRAVITY);
+        bufferCount += 1;
+        buffer[bufferCount] = (int)((float)gx/GYRO_SENSITIVITY);
+        bufferCount += 1;
+        buffer[bufferCount] = (int)((float)gy/GYRO_SENSITIVITY);
+        bufferCount += 1;
+        buffer[bufferCount] = (int)((float)gz/GYRO_SENSITIVITY);
+        bufferCount += 1;
+        
+        vTaskDelayUntil(&xLastWakeTime, (20 / portTICK_PERIOD_MS)); // read acc every 50ms
+      }
+      
+      for(int i=0; i < 30; i++){
+        Serial.print(buffer[i]);
+        Serial.print(",");
+        if(i == 5 || i == 11 || i == 17 || i == 23 || i == 29){
+          Serial.print("\n");
+        }
+      }
+      incomingByte = 0;
+      
+    }
+  }
+}
+
 // Task for A1
 static void A1Task(void* pvParameter){
   int16_t ax, ay, az, gx, gy, gz;
+  const TickType_t xDelay = 50 / portTICK_PERIOD_MS;
 
   while(1){
     if((xSemaphoreProducer != NULL) && (xSemaphoreBuffer != NULL)){
@@ -138,14 +191,14 @@ static void A1Task(void* pvParameter){
         mpu.getAcceleration(&ax, &ay, &az);
         mpu.getRotation(&gx, &gy, &gz);
         
-        while (readFlag == 0) {
-          if (Serial.available()) {
-            if (Serial.read() == 'R') {
-              readFlag = 1;
-              count = 0;
-            }
-          }
-        }
+//        while (readFlag == 0) {
+//          if (Serial.available()) {
+//            if (Serial.read() == 'R') {
+//              readFlag = 1;
+//              count = 0;
+//            }
+//          }
+//        }
 
         buffer[in] = (((float)(ax-avgAccX)/ACCEL_SENSITIVITY)*GRAVITY);
         in = (in+1)%N;
@@ -164,6 +217,7 @@ static void A1Task(void* pvParameter){
         count += 1;
                 
         xSemaphoreGive(xSemaphoreBuffer);
+        vTaskDelay(xDelay);
 //        xSemaphoreGive(xSemaphoreProducer);
       }
       else {
@@ -192,13 +246,8 @@ static void CommTask(void* pvParameters){
         }
         Serial.println();
         Serial.println(count);
-        delay(0.5);
 
         itemsInBuffer = 0;
-        
-        if(count >= 30) {
-          readFlag == 0;
-        }
 
         vTaskDelay(1);
         xSemaphoreGive(xSemaphoreBuffer);
