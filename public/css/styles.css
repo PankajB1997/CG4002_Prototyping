@@ -9,7 +9,7 @@ hr {
     border-color: #0E48A1;
 }
 
-#header {
+.container {
     width: 100%;
     margin: 0;
  }
