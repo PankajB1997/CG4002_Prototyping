@@ -83,12 +83,15 @@ class RaspberryPi():
         # self.device = btle.Peripheral("0c:b2:b7:46:57:50")
         self.device = btle.Peripheral("0c:b2:b7:46:39:a6")
         print("Device 1 connected!")
-        #self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
+        self.device2 = btle.Peripheral("0c:b2:b7:46:35:96")
         print("Device 2 connected!")
         self.device.setDelegate(MyDelegate())
         writing_port = self.device.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
         self.dfb1 = writing_port.getCharacteristics()[0]
         self.device.writeCharacteristic((self.dfb1.getHandle() + 1), setup_data)
+        writing_port_2 = self.device2.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
+        self.dfb2 = writing_port_2.getCharacteristics()[0]
+        self.device2.writeCharacteristic((self.dfb2.getHandle() + 1), setup_data)
         print("Ports Open!")
 
     def run(self):
@@ -103,17 +106,13 @@ class RaspberryPi():
 
             #Send start signal
             self.dfb1.write(bytes("H", "utf-8"))
+            self.dfb2.write(bytes("H", "utf-8"))
             print("H sent")
-<<<<<<< HEAD
-            
-            time.sleep(1)
-            
-=======
 
             time.sleep(5)
 
->>>>>>> 976101d1605f68ca04807b540aecc724a7fb42ca
             self.dfb1.write(bytes("R", "utf-8"))
+            self.dfb2.write(bytes("R", "utf-8"))
             print("R sent")
 
             #print(self.device2.getState())
@@ -138,22 +137,13 @@ class RaspberryPi():
                     #time.sleep(0.5)
 
             while 1:
-<<<<<<< HEAD
-                #continue
-                if self.device.waitForNotifications(1.0):
+                if self.device.waitForNotifications(1.0) or self.device2.waitForNotifications(1.0):
                     continue
-                
-                #time.sleep(1)    
+                #time.sleep(1)
                 self.dfb1.write(bytes("R", "utf-8"))
+                self.dfb2.write(bytes("R", "utf-8"))
                 print("R sent")
-                
-        
-=======
-                continue
-                #if self.device.waitForNotifications(1.0):
-                    #continue
 
->>>>>>> 976101d1605f68ca04807b540aecc724a7fb42ca
         except KeyboardInterrupt:
             sys.exit(1)
 
