@@ -82,13 +82,12 @@ class RaspberryPi():
         setup_data = b"\x01\x00"
         self.device = btle.Peripheral("0c:b2:b7:46:57:50")
         print("Device 1 connected!")
-        self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
+        #self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
         print("Device 2 connected!")
         self.device.setDelegate(MyDelegate())
         writing_port = self.device.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
         self.dfb1 = writing_port.getCharacteristics()[0]
-        notify_handle = self.dfb1.getHandle() + 1
-        self.device.writeCharacteristic(notify_handle, setup_data)
+        self.device.writeCharacteristic((self.dfb1.getHandle() + 1), setup_data)
         print("Ports Open!")
 	
     def run(self):
@@ -105,7 +104,7 @@ class RaspberryPi():
             self.dfb1.write(bytes("H", "utf-8"))
             print("H sent")
             
-            time.sleep(5)
+            time.sleep(1)
             
             self.dfb1.write(bytes("R", "utf-8"))
             print("R sent")
@@ -132,9 +131,14 @@ class RaspberryPi():
                     #time.sleep(0.5)
                     
             while 1:
-                continue
-                #if self.device.waitForNotifications(1.0):
-                    #continue
+                #continue
+                if self.device.waitForNotifications(1.0):
+                    continue
+                
+                #time.sleep(1)    
+                self.dfb1.write(bytes("R", "utf-8"))
+                print("R sent")
+                
         
         except KeyboardInterrupt:
             sys.exit(1)
