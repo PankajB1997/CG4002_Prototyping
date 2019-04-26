@@ -17,14 +17,14 @@ testing_samples = 1
 
 reply_from_bluno = ""
 
-def readlineCR(port): 
-    rv="" 
+def readlineCR(port):
+    rv=""
     while True:
-        ch=port.read() 
-        rv+=ch 
-        if ch=='\r': 
+        ch=port.read()
+        rv+=ch
+        if ch=='\r':
             return rv
-            
+
 class MyDelegate(btle.DefaultDelegate):
     def __init__(self):
         btle.DefaultDelegate.__init__(self)
@@ -33,13 +33,13 @@ class MyDelegate(btle.DefaultDelegate):
         global reply_from_bluno
         print("A notification was received: %s" %data)
         reply_from_bluno = data.decode("utf-8")
-        
+
 class Data():
     def __init__(self, socket):
         self.bs = 32
         self.secret_key = "1234512345123451"
-        self.voltage = 0 
-        self.current = 0 
+        self.voltage = 0
+        self.current = 0
         self.power = 0  #voltage * current
         self.cumpower=0
         self.sock = socket
@@ -66,7 +66,7 @@ class RaspberryPi():
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.isHandshakeDone = False
         self.result_queue = deque([], 2)
-        
+
         self.prev_data_time = time.time()
         self.current_data_time = time.time()
 
@@ -80,7 +80,8 @@ class RaspberryPi():
         #self.serial_port=serial.Serial("/dev/serial0", baudrate=115200, timeout=0) #For the Rpi
         print("Connecting to bluno ...")
         setup_data = b"\x01\x00"
-        self.device = btle.Peripheral("0c:b2:b7:46:57:50")
+        # self.device = btle.Peripheral("0c:b2:b7:46:57:50")
+        self.device = btle.Peripheral("0c:b2:b7:46:39:a6")
         print("Device 1 connected!")
         #self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
         print("Device 2 connected!")
@@ -89,7 +90,7 @@ class RaspberryPi():
         self.dfb1 = writing_port.getCharacteristics()[0]
         self.device.writeCharacteristic((self.dfb1.getHandle() + 1), setup_data)
         print("Ports Open!")
-	
+
     def run(self):
         try:
             #Connections
@@ -99,18 +100,24 @@ class RaspberryPi():
                 data = Data(self.sock)
 
             self.connectToArduino()
-            
+
             #Send start signal
             self.dfb1.write(bytes("H", "utf-8"))
             print("H sent")
+<<<<<<< HEAD
             
             time.sleep(1)
             
+=======
+
+            time.sleep(5)
+
+>>>>>>> 976101d1605f68ca04807b540aecc724a7fb42ca
             self.dfb1.write(bytes("R", "utf-8"))
             print("R sent")
-            
+
             #print(self.device2.getState())
-            
+
             #Handshaking with Arduino
             #while(self.isHandshakeDone == False):
                 #self.dfb1.write(bytes("H", "utf-8"))
@@ -129,8 +136,9 @@ class RaspberryPi():
                     #time.sleep(1)
                 #else:
                     #time.sleep(0.5)
-                    
+
             while 1:
+<<<<<<< HEAD
                 #continue
                 if self.device.waitForNotifications(1.0):
                     continue
@@ -140,10 +148,15 @@ class RaspberryPi():
                 print("R sent")
                 
         
+=======
+                continue
+                #if self.device.waitForNotifications(1.0):
+                    #continue
+
+>>>>>>> 976101d1605f68ca04807b540aecc724a7fb42ca
         except KeyboardInterrupt:
             sys.exit(1)
-            
+
 if __name__ == '__main__':
     pi = RaspberryPi()
     pi.run()
-
