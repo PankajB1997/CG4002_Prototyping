@@ -1,7 +1,7 @@
 # CG4002 Prototyping
 
 Dashboard is developed using MEAN stack (MongoDB, ExpressJS, AngularJS, NodeJS).
-Code for hardware and comms to be included as well.
+Code for hardware, communications and machine learning included as well.
 
 Live demo link for dashboard (test version with random data): https://cg4002.herokuapp.com/#!/
 
