@@ -23,7 +23,6 @@ from obspy.signal.filter import highpass
 from scipy.signal import savgol_filter
 from scipy.fftpack import fft, ifft, rfft
 from scipy.stats import entropy
-# from keras.models import load_model
 
 # Fix seed value for reproducibility
 np.random.seed(1234)
@@ -154,41 +153,31 @@ except:
 
 # for every segment of data, extract the feature vector
 def extract_feature_vector(X):
-    try:
-        # preprocess data
-        X = savgol_filter(X, 3, 2)
-        X = highpass(X, 3, 50)
-        X = min_max_scaler.transform(X)
+    # # extract acceleration and angular velocity
+    # X_accA = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 0:3], axis=0))))
+    # X_accB = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 3:6], axis=0))))
+    # X_gyro = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 6:9], axis=0))))
+    # X_mag = np.asarray([ X_accA, X_accB, X_gyro ])
 
-        # # extract acceleration and angular velocity
-        # X_accA = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 0:3], axis=0))))
-        # X_accB = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 3:6], axis=0))))
-        # X_gyro = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 6:9], axis=0))))
-        # X_mag = np.asarray([ X_accA, X_accB, X_gyro ])
+    # extract time domain features
+    X_mean = np.mean(X, axis=0)
+    X_median = np.median(X, axis=0)
+    X_var = np.var(X, axis=0)
+    X_max = np.max(X, axis=0)
+    X_min = np.min(X, axis=0)
+    X_off = np.subtract(X_max, X_min)
+    X_mad = robust.mad(X, axis=0)
 
-        # extract time domain features
-        X_mean = np.mean(X, axis=0)
-        X_median = np.median(X, axis=0)
-        # X_var = np.var(X, axis=0)
-        X_max = np.max(X, axis=0)
-        X_min = np.min(X, axis=0)
-        X_off = np.subtract(X_max, X_min)
-        X_mad = robust.mad(X, axis=0)
+    # extract frequency domain features
+    X_fft_abs = np.abs(fft(X)) # np.abs() if you want the absolute val of complex number
+    X_fft_mean = np.mean(X_fft_abs, axis=0)
+    X_fft_var = np.var(X_fft_abs, axis=0)
+    X_fft_max = np.max(X_fft_abs, axis=0)
+    X_fft_min = np.min(X_fft_abs, axis=0)
+    X_entr = entropy(np.abs(np.fft.rfft(X, axis=0))[1:], base=2)
 
-        # # extract frequency domain features
-        # X_fft_abs = np.abs(fft(X)) #np.abs() if you want the absolute val of complex number
-        # X_fft_mean = np.mean(X_fft_abs, axis=0)
-        # X_fft_var = np.var(X_fft_abs, axis=0)
-        # X_fft_max = np.max(X_fft_abs, axis=0)
-        # X_fft_min = np.min(X_fft_abs, axis=0)
-        # X_entr = entropy(np.abs(np.fft.rfft(X, axis=0))[1:], base=2)
-
-        # return feature vector by appending all vectors above as one d-dimension feature vector
-        X = np.append(X_mean, [ X_median, X_off, X_mad ])
-        return standard_scaler.transform([X])
-    except:
-        traceback.print_exc()
-        print("Error in predicting dance move!")
+    # return feature vector by appending all vectors above as one d-dimension feature vector
+    return np.append(X_off, [ X_mean, X_median, X_var, X_mad, X_entr, X_min, X_max, X_fft_mean, X_fft_var, X_fft_max, X_fft_min ])
 
 def predict_dance_move(segment):
     try:
@@ -206,16 +195,14 @@ def readLineCR(port):
     while True:
         ch = port.read().decode()
         rv += ch
-        # print("I'm reading " + ch)
-        # if ch == "\r" or ch == "":
-        if ch == "\r":
+        if ch == "\r" or ch == "":
             return rv
 
 def compute_checksum(data, correct_cs):
     correct_cs = correct_cs.strip()
     cs = 0
     for i in range(len(data)):
-        cs += ord(data[i]) #to get ASCII value of each char
+        cs += ord(data[i]) # to get ASCII value of each char
     if (cs == int(correct_cs)):
         # print("Packet OK")
         return True
@@ -227,22 +214,20 @@ def compute_checksum(data, correct_cs):
         return False
 
 def inputData():
-    #'#action | voltage | current | power | cumulativepower|'
+    # '#action | voltage | current | power | cumulativepower|'
     action = str(input('Manually enter data: '))
     data = '#' + action + '|2.0|1.5|5.6|10.10|'
     return data
 
 def encryption(data, secret_key):
-	#Padding
+	# Padding
 	length = BLOCK_SIZE-(len(data)%BLOCK_SIZE)
 	msg = data+((chr(length))*(length))
 	print(msg)
-
-	#encryption
+	# encryption
 	iv = Random.new().read(AES.block_size)
 	cipher = AES.new(secret_key, AES.MODE_CBC, iv)
 	encoded = base64.b64encode(iv + cipher.encrypt(msg))
-
 	return encoded
 
 def sendToServer(s, data):
@@ -255,8 +240,8 @@ def lastXDanceMovesSame(danceMoveBuffer):
         return len(set(lastXMoves)) == 1
 
 try:
-    #Establish socket connection
-    #input on console in this format: IP_address Port_number
+    # Establish socket connection
+    # input on console in this format: IP_address Port_number
     TCP_IP = sys.argv[1]
     TCP_PORT = int(sys.argv[2])
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -266,18 +251,18 @@ except:
     print("Error in establishing socket connection with the server!")
     exit()
 
-#Check if connected to server
+# Check if connected to server
 if (s):
 	print("connected to server")
 else:
 	print("not connected to server")
 
-#Establish arduino-rpi connection
+# Establish arduino-rpi connection
 # dataArray = [] # N objects in array, per 20ms
 handshake_flag = False
 data_flag = False
 print("test")
-port=serial.Serial("/dev/serial0", baudrate=115200, timeout=3.0)
+port = serial.Serial("/dev/serial0", baudrate=115200, timeout=3.0)
 print("set up")
 port.reset_input_buffer()
 port.reset_output_buffer()
@@ -307,7 +292,6 @@ countMovesSent = 0
 stoptime = int(round(time.time() * 1000))
 ite = N
 while (data_flag == False):
-
     # print("ENTERING")
     cs = False
     checksum_data = []
@@ -320,15 +304,14 @@ while (data_flag == False):
             ite = N
         for i in range(ite): # extract from 0->N-1 = N sets of readings
             checksum_data = readLineCR(port)
-            #if not len(data) == 13:
-            #   print("Corrupt packet!")
-               # print(data)
-            #   continue
+            # if not len(data) == 13:
+            #     print("Corrupt packet!")
+            #     print(data)
+            #     continue
             checksum_data, correct_checksum = checksum_data.rsplit(',' , 1)
             cs = compute_checksum(checksum_data, correct_checksum)
             if cs:
                 data = checksum_data.split(',')
-                # print(data)
                 data = [ float(val.strip()) for val in data ]
                 movementData.append(data[:9]) # extract acc1[3], and acc2[3] values
                 otherData.append(data[9:]) # extract voltage, current, power and cumulative power
@@ -340,15 +323,9 @@ while (data_flag == False):
     if int(round(time.time() * 1000)) - wait_time <= INITIAL_WAIT:
         continue
 
-    # print(previousPacketData)
-    # print(len(previousPacketData))
-    # print(len(movementData))
-
     diff = int(round(time.time() * 1000)) - stoptime
     if diff <= WAIT:
         continue
-
-    # print(otherData)
 
     # Add overlapping logic
     if len(previousPacketData) == N - EXTRACT_SIZE and not EXTRACT_SIZE == N:
