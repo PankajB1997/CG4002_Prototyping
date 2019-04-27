@@ -146,7 +146,7 @@ void mainTask(void *p) {
       xLastWakeTime = xTaskGetTickCount();
       memset(buffer, 0.0, 30);
       bufferCount = 0;
-      for (int i = 0; i < 5; i++) {
+      //for (int i = 0; i < 5; i++) {
         
         mpu.getAcceleration(&ax, &ay, &az);
         mpu.getRotation(&gx, &gy, &gz);
@@ -164,16 +164,17 @@ void mainTask(void *p) {
         buffer[bufferCount] = (int)((float)gz/GYRO_SENSITIVITY);
         bufferCount += 1;
         
-        vTaskDelayUntil(&xLastWakeTime, (20 / portTICK_PERIOD_MS)); // read acc every 50ms
-      }
+        //vTaskDelayUntil(&xLastWakeTime, (20 / portTICK_PERIOD_MS)); // read acc every 50ms
+      //}
       
-      for(int i=0; i < 30; i++){
+      for(int i=0; i < 6; i++){
         Serial.print(buffer[i]);
         Serial.print(",");
-        if(i == 5 || i == 11 || i == 17 || i == 23 || i == 29){
-          Serial.print("\n");
-        }
+        //if(i == 5 || i == 11 || i == 17 || i == 23 || i == 29){
+          //Serial.print("\n");
+        //}
       }
+      Serial.print("\n");
       incomingByte = 0;
       
     }
