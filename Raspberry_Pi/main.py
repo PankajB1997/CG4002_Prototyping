@@ -31,7 +31,7 @@ class MyDelegate(btle.DefaultDelegate):
 
     def handleNotification(self, cHandle, data):
         global reply_from_bluno
-        print("A notification was received: %s" %data)
+        print("A notification was received: %s from %s" %(data, cHandle))
         reply_from_bluno = data.decode("utf-8")
 
 class Data():
@@ -80,15 +80,19 @@ class RaspberryPi():
         #self.serial_port=serial.Serial("/dev/serial0", baudrate=115200, timeout=0) #For the Rpi
         print("Connecting to bluno ...")
         setup_data = b"\x01\x00"
-        # self.device = btle.Peripheral("0c:b2:b7:46:57:50")
-        self.device = btle.Peripheral("0c:b2:b7:46:39:a6")
+        self.device = btle.Peripheral("0c:b2:b7:46:57:50")
+        #self.device = btle.Peripheral("0c:b2:b7:46:39:a6")
         print("Device 1 connected!")
-        self.device2 = btle.Peripheral("0c:b2:b7:46:35:96")
+        self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
+        #self.device2 = btle.Peripheral("0c:b2:b7:46:35:96")
         print("Device 2 connected!")
+        
         self.device.setDelegate(MyDelegate())
         writing_port = self.device.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
         self.dfb1 = writing_port.getCharacteristics()[0]
         self.device.writeCharacteristic((self.dfb1.getHandle() + 1), setup_data)
+        
+        self.device2.setDelegate(MyDelegate())
         writing_port_2 = self.device2.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
         self.dfb2 = writing_port_2.getCharacteristics()[0]
         self.device2.writeCharacteristic((self.dfb2.getHandle() + 1), setup_data)
@@ -114,8 +118,6 @@ class RaspberryPi():
             self.dfb1.write(bytes("R", "utf-8"))
             self.dfb2.write(bytes("R", "utf-8"))
             print("R sent")
-
-            #print(self.device2.getState())
 
             #Handshaking with Arduino
             #while(self.isHandshakeDone == False):
