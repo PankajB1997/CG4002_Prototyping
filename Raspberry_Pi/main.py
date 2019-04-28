@@ -18,7 +18,7 @@ testing_samples = 1
 bt_addrs = ['0c:b2:b7:46:57:50', '0c:b2:b7:46:35:f5'] #Add all bluno addresses here as a list
 connections = []
 connection_threads = []
-data_string = ""
+message_buffer = []
 
 def readlineCR(port):
     rv=""
@@ -59,20 +59,24 @@ class NotificationDelegate(DefaultDelegate):
     def __init__(self, number):
         DefaultDelegate.__init__(self)
         self.number = number
+        self.message_string = ""
 
     def handleNotification(self, cHandle, data):
         end_of_message = False
         msg = data.decode("utf-8")
         print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ msg)
         if "\n" in msg:
-            data_string = data_string + msg
+            self.message_string = self.message_string + msg
             end_of_message = True
         else:
-            data_string = data_string + msg
+            self.message_string = self.message_string + msg
         
-        file_name = "data{}".format(self.number)
-        my_file = open(file_name, 'a+')
-        my_file.write(msg)
+        if end_of_message:
+            message_buffer.append(self.message_string)
+            file_name = "data{}".format(self.number)
+            my_file = open(file_name, 'a+')
+            my_file.write(self.message_string)
+            self.message_string = ""            
 
 class ConnectionHandlerThread (threading.Thread):
     def __init__(self, connection_index):
@@ -151,6 +155,11 @@ class RaspberryPi():
             self.connectToArduino()
 
             while 1:
+                if len(message_buffer) == 2:
+                    full_msg = message_buffer[0].strip("\n") + message_buffer[1]
+                    full_file = open("combined", 'a+')
+                    full_file.write(full_msg)
+                    message_buffer.clear()
                 continue
 
             #Send start signal
