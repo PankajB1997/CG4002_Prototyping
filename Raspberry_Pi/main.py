@@ -1,5 +1,4 @@
-from bluepy import btle
-from bluepy.btle import Scanner
+from bluepy.btle import Scanner, DefaultDelegate, Peripheral
 import datetime
 from collections import deque
 import datetime
@@ -10,12 +9,16 @@ import time
 from Crypto import Random
 from Crypto.Cipher import AES
 import base64
+import threading
 
 useServer = 0
 collect_test_data = 0
 testing_samples = 1
 
 reply_from_bluno = ""
+bt_addrs = ['0c:b2:b7:46:57:50', '0c:b2:b7:46:35:f5']
+connections = []
+connection_threads = []
 
 def readlineCR(port):
     rv=""
@@ -24,15 +27,6 @@ def readlineCR(port):
         rv+=ch
         if ch=='\r':
             return rv
-
-class MyDelegate(btle.DefaultDelegate):
-    def __init__(self):
-        btle.DefaultDelegate.__init__(self)
-
-    def handleNotification(self, cHandle, data):
-        global reply_from_bluno
-        print("A notification was received: %s from %s" %(data, cHandle))
-        reply_from_bluno = data.decode("utf-8")
 
 class Data():
     def __init__(self, socket):
@@ -61,6 +55,37 @@ class Data():
         encryptedText = self.encryptText(formattedAnswer, self.secret_key)
         self.sock.send(encryptedText)
 
+class NotificationDelegate(DefaultDelegate):
+    def __init__(self):
+        DefaultDelegate.__init__(self)
+        self.number = number
+
+    def handleNotification(self, cHandle, data):
+        #global reply_from_bluno
+        print('Notification:\nConnection:'+str(self.number)+'\nHandler:'+str(cHandle)+'\nMsg:'+data)
+        #reply_from_bluno = data.decode("utf-8")
+
+class ConnectionHandlerThread (threading.Thread):
+    def __init__(self, connection_index):
+        threading.Thread.__init__(self)
+        self.connection_index = connection_index
+
+    def run(self):
+        connection = connections[self.connection_index]
+        connection.setDelegate(NotificationDelegate(self.connection_index))
+        port = connection.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
+        dfb1 = port.getCharacteristics()[0]
+        connection.writeCharacteristic((dfb1.getHandle() + 1), b"\x01\x00")
+
+        dfb1.write(bytes("H", "utf-8"))
+        print("H sent")
+
+        while True:
+            if connection.waitForNotifications(1):
+                continue
+            dfb1.write(bytes("R", "utf-8"))
+            print("R sent")
+
 class RaspberryPi():
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -77,25 +102,33 @@ class RaspberryPi():
         self.sock.connect(server_address)
 
     def connectToArduino(self):
-        #self.serial_port=serial.Serial("/dev/serial0", baudrate=115200, timeout=0) #For the Rpi
+        
         print("Connecting to bluno ...")
-        setup_data = b"\x01\x00"
-        self.device = btle.Peripheral("0c:b2:b7:46:57:50")
+        #setup_data = b"\x01\x00"
+        for addr in bt_addrs:
+            p = Peripheral(addr)
+            connections.append(p)
+
+            t = ConnectionHandlerThread(len(connections)-1)
+            t.start()
+            connection_threads.append(t)
+
+        #self.device = btle.Peripheral("0c:b2:b7:46:57:50")
         #self.device = btle.Peripheral("0c:b2:b7:46:39:a6")
-        print("Device 1 connected!")
-        self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
+        #print("Device 1 connected!")
+        #self.device2 = btle.Peripheral("0c:b2:b7:46:35:f5")
         #self.device2 = btle.Peripheral("0c:b2:b7:46:35:96")
-        print("Device 2 connected!")
+        #print("Device 2 connected!")
         
-        self.device.setDelegate(MyDelegate())
-        writing_port = self.device.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
-        self.dfb1 = writing_port.getCharacteristics()[0]
-        self.device.writeCharacteristic((self.dfb1.getHandle() + 1), setup_data)
+        #self.device.setDelegate(MyDelegate())
+        # writing_port = self.device.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
+        # self.dfb1 = writing_port.getCharacteristics()[0]
+        # self.device.writeCharacteristic((self.dfb1.getHandle() + 1), setup_data)
         
-        self.device2.setDelegate(MyDelegate())
-        writing_port_2 = self.device2.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
-        self.dfb2 = writing_port_2.getCharacteristics()[0]
-        self.device2.writeCharacteristic((self.dfb2.getHandle() + 1), setup_data)
+        # self.device2.setDelegate(MyDelegate())
+        # writing_port_2 = self.device2.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
+        # self.dfb2 = writing_port_2.getCharacteristics()[0]
+        # self.device2.writeCharacteristic((self.dfb2.getHandle() + 1), setup_data)
         print("Ports Open!")
 
     def run(self):
@@ -108,16 +141,19 @@ class RaspberryPi():
 
             self.connectToArduino()
 
+            while 1:
+                continue
+
             #Send start signal
-            self.dfb1.write(bytes("H", "utf-8"))
-            self.dfb2.write(bytes("H", "utf-8"))
-            print("H sent")
+            #self.dfb1.write(bytes("H", "utf-8"))
+            #self.dfb2.write(bytes("H", "utf-8"))
+            # print("H sent")
 
-            time.sleep(5)
+            # time.sleep(5)
 
-            self.dfb1.write(bytes("R", "utf-8"))
-            self.dfb2.write(bytes("R", "utf-8"))
-            print("R sent")
+            # self.dfb1.write(bytes("R", "utf-8"))
+            # self.dfb2.write(bytes("R", "utf-8"))
+            # print("R sent")
 
             #Handshaking with Arduino
             #while(self.isHandshakeDone == False):
@@ -138,13 +174,13 @@ class RaspberryPi():
                 #else:
                     #time.sleep(0.5)
 
-            while 1:
-                if self.device.waitForNotifications(1.0) or self.device2.waitForNotifications(1.0):
-                    continue
-                #time.sleep(1)
-                self.dfb1.write(bytes("R", "utf-8"))
-                self.dfb2.write(bytes("R", "utf-8"))
-                print("R sent")
+            # while 1:
+            #     if self.device.waitForNotifications(1.0) or self.device2.waitForNotifications(1.0):
+            #         continue
+            #     #time.sleep(1)
+            #     self.dfb1.write(bytes("R", "utf-8"))
+            #     self.dfb2.write(bytes("R", "utf-8"))
+            #     print("R sent")
 
         except KeyboardInterrupt:
             sys.exit(1)
