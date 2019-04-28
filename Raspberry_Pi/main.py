@@ -15,10 +15,10 @@ useServer = 0
 collect_test_data = 0
 testing_samples = 1
 
-reply_from_bluno = ""
-bt_addrs = ['0c:b2:b7:46:57:50', '0c:b2:b7:46:35:f5']
+bt_addrs = ['0c:b2:b7:46:57:50', '0c:b2:b7:46:35:f5'] #Add all bluno addresses here as a list
 connections = []
 connection_threads = []
+data_string = ""
 
 def readlineCR(port):
     rv=""
@@ -61,13 +61,18 @@ class NotificationDelegate(DefaultDelegate):
         self.number = number
 
     def handleNotification(self, cHandle, data):
-        #global reply_from_bluno
+        end_of_message = False
         msg = data.decode("utf-8")
         print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ msg)
+        if "\n" in msg:
+            data_string = data_string + msg
+            end_of_message = True
+        else:
+            data_string = data_string + msg
+        
         file_name = "data{}".format(self.number)
         my_file = open(file_name, 'a+')
         my_file.write(msg)
-        #reply_from_bluno = data.decode("utf-8")
 
 class ConnectionHandlerThread (threading.Thread):
     def __init__(self, connection_index):
