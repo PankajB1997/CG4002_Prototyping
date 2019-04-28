@@ -56,13 +56,17 @@ class Data():
         self.sock.send(encryptedText)
 
 class NotificationDelegate(DefaultDelegate):
-    def __init__(self, number ):
+    def __init__(self, number):
         DefaultDelegate.__init__(self)
         self.number = number
 
     def handleNotification(self, cHandle, data):
         #global reply_from_bluno
-        print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ data.decode("utf-8"))
+        msg = data.decode("utf-8")
+        print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ msg)
+        file_name = "data{}".format(self.number)
+        my_file = open(file_name, 'a+')
+        my_file.write(msg)
         #reply_from_bluno = data.decode("utf-8")
 
 class ConnectionHandlerThread (threading.Thread):
