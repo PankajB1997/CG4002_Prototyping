@@ -15,7 +15,7 @@ useServer = 0
 collect_test_data = 0
 testing_samples = 1
 
-bt_addrs = ['0c:b2:b7:46:57:50', '0c:b2:b7:46:35:f5'] #Add all bluno addresses here as a list
+bt_addrs = ['0c:b2:b7:46:57:50', '0c:b2:b7:46:35:f5', '0c:b2:b7:46:4d:80', '0c:b2:b7:46:35:96', '0c:b2:b7:46:39:a6', '0c:b2:b7:46:41:67'] #Add all bluno addresses here as a list
 connections = []
 connection_threads = []
 message_buffer = []
@@ -64,7 +64,7 @@ class NotificationDelegate(DefaultDelegate):
     def handleNotification(self, cHandle, data):
         end_of_message = False
         msg = data.decode("utf-8")
-        print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ msg)
+        #print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ msg)
         self.message_string = self.message_string + msg
         if "\n" in msg:
             end_of_message = True
@@ -119,7 +119,7 @@ class RaspberryPi():
         for addr in bt_addrs:
             p = Peripheral(addr)
             connections.append(p)
-            message_buffer[len(connections)-1] = []
+            message_buffer.append([])
 
             t = ConnectionHandlerThread(len(connections)-1)
             t.start()
@@ -158,10 +158,29 @@ class RaspberryPi():
                     first_string = message_buffer[0][0].strip("\n")
                     second_string = message_buffer[1][0].strip("\n")[:-1] #Remove the last \n and comma
                     full_msg = first_string + second_string + "\n"
-                    full_file = open("combined", 'a+')
+                    full_file = open("1st_dancer", 'a+')
                     full_file.write(full_msg)
                     message_buffer[0] = message_buffer[0][1:]
                     message_buffer[1] = message_buffer[1][1:]
+                    
+                if len(message_buffer[2]) > 0 and len(message_buffer[3]) > 0:
+                    first_string = message_buffer[2][0].strip("\n")
+                    second_string = message_buffer[3][0].strip("\n")[:-1] #Remove the last \n and comma
+                    full_msg = first_string + second_string + "\n"
+                    full_file = open("2nd_dancer", 'a+')
+                    full_file.write(full_msg)
+                    message_buffer[2] = message_buffer[2][1:]
+                    message_buffer[3] = message_buffer[3][1:]
+                    
+                if len(message_buffer[4]) > 0 and len(message_buffer[5]) > 0:
+                    first_string = message_buffer[4][0].strip("\n")
+                    second_string = message_buffer[5][0].strip("\n")[:-1] #Remove the last \n and comma
+                    full_msg = first_string + second_string + "\n"
+                    full_file = open("3rd_dancer", 'a+')
+                    full_file.write(full_msg)
+                    message_buffer[4] = message_buffer[4][1:]
+                    message_buffer[5] = message_buffer[5][1:]
+                    
                 continue
 
             #Send start signal
