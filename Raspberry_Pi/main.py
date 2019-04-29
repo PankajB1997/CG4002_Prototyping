@@ -96,8 +96,8 @@ class ConnectionHandlerThread (threading.Thread):
         while True:
             if connection.waitForNotifications(1):
                 continue
-            dfb1.write(bytes("R", "utf-8"))
-            print("R sent")
+            #dfb1.write(bytes("R", "utf-8"))
+            #print("R sent")
 
 class RaspberryPi():
     def __init__(self):

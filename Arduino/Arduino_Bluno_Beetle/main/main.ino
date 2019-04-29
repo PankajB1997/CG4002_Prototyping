@@ -68,7 +68,7 @@ void connectToPi() {
 //      delay(1000);
 //    }
 //  }
-  Serial.println("Arduino is Ready!");
+  //Serial.println("Arduino is Ready!");
 
 }
 
@@ -109,7 +109,7 @@ void setup() {
   Serial.println("Testing device connections...");
   Serial.println(mpu.testConnection() ? "MPU6050 - accelgyro1 connection successful" : "MPU6050 - accelgyro1 connection failed");
   
-  connectToPi();
+  //connectToPi();
   
   // create semaphores - currently we only have one task
   xSemaphoreProducer = xSemaphoreCreateBinary();
@@ -139,10 +139,10 @@ void mainTask(void *p) {
 
   xLastWakeTime = xTaskGetTickCount();
   for(;;){
-    if (Serial.available()) {       // Check if message available
-      incomingByte = Serial.read();
-    }
-    if(incomingByte == 'R'){
+    //if (Serial.available()) {       // Check if message available
+      //incomingByte = Serial.read();
+    //}
+    //if(incomingByte == 'R'){
       xLastWakeTime = xTaskGetTickCount();
       memset(buffer, 0.0, 30);
       bufferCount = 0;
@@ -176,8 +176,8 @@ void mainTask(void *p) {
       }
       Serial.print("\n");
       incomingByte = 0;
-      
-    }
+      vTaskDelayUntil(&xLastWakeTime, (20 / portTICK_PERIOD_MS)); // read acc every 50ms
+    //}
   }
 }
 
