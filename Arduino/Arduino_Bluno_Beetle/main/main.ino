@@ -109,7 +109,7 @@ void setup() {
   Serial.println("Testing device connections...");
   Serial.println(mpu.testConnection() ? "MPU6050 - accelgyro1 connection successful" : "MPU6050 - accelgyro1 connection failed");
   
-  //connectToPi();
+  connectToPi();
   
   // create semaphores - currently we only have one task
   xSemaphoreProducer = xSemaphoreCreateBinary();
