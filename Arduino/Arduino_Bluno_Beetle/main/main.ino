@@ -176,7 +176,7 @@ void mainTask(void *p) {
       }
       Serial.print("\n");
       incomingByte = 0;
-      vTaskDelayUntil(&xLastWakeTime, (20 / portTICK_PERIOD_MS)); // read acc every 50ms
+      vTaskDelayUntil(&xLastWakeTime, (100 / portTICK_PERIOD_MS)); // read acc every 50ms
     //}
   }
 }

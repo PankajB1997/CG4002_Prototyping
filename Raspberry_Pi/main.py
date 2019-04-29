@@ -65,14 +65,12 @@ class NotificationDelegate(DefaultDelegate):
         end_of_message = False
         msg = data.decode("utf-8")
         print('Notification:\nConnection:'+str(self.number)+ '\nMsg:'+ msg)
+        self.message_string = self.message_string + msg
         if "\n" in msg:
-            self.message_string = self.message_string + msg
             end_of_message = True
-        else:
-            self.message_string = self.message_string + msg
         
         if end_of_message:
-            message_buffer.append(self.message_string)
+            message_buffer[self.number].append(self.message_string)
             file_name = "data{}".format(self.number)
             my_file = open(file_name, 'a+')
             my_file.write(self.message_string)
@@ -155,11 +153,14 @@ class RaspberryPi():
             self.connectToArduino()
 
             while 1:
-                if len(message_buffer) == 2:
-                    full_msg = message_buffer[0].strip("\n") + message_buffer[1]
+                if len(message_buffer[0]) > 0 and len(message_buffer[1]) > 0:
+                    first_string = message_buffer[0][0].strip("\n")
+                    second_string = message_buffer[1][0].strip("\n")[:-1] #Remove the last \n and comma
+                    full_msg = first_string + second_string + "\n"
                     full_file = open("combined", 'a+')
                     full_file.write(full_msg)
-                    message_buffer.clear()
+                    message_buffer[0] = message_buffer[0][1:]
+                    message_buffer[1] = message_buffer[1][1:]
                 continue
 
             #Send start signal
