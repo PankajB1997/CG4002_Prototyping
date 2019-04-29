@@ -119,6 +119,7 @@ class RaspberryPi():
         for addr in bt_addrs:
             p = Peripheral(addr)
             connections.append(p)
+            message_buffer[len(connections)-1] = []
 
             t = ConnectionHandlerThread(len(connections)-1)
             t.start()
