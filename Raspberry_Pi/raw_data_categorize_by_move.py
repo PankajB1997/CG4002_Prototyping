@@ -1,17 +1,15 @@
 import os, pickle
 
-RAW_DATASET_PATH = os.path.join("dataset", "RawData")
-SAVEPATH = os.path.join("dataset", "data_by_move.pkl")
+RAW_DATASET_PATH = os.path.join("..", "dataset", "RawData")
+SAVEPATH = os.path.join("..", "dataset", "data_by_move.pkl")
 
-moves = [ 'wipers', 'number7', 'chicken', 'sidestep', 'turnclap', 'numbersix', 'salute', 'mermaid', 'swing', 'cowboy', 'logout' ]
+moves = [ 'chicken', 'wipers', 'number7' ]
 
 data_by_move = {}
 
 for move in moves:
     data_by_move[move] = []
     for dancer in os.listdir(RAW_DATASET_PATH):
-        # if not dancer == 'junyang':
-        #     continue
         move_data_current_dancer = os.path.join(RAW_DATASET_PATH, dancer, move + '.txt')
         print(move_data_current_dancer)
         data_count = 0

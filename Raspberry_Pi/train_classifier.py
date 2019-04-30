@@ -8,7 +8,6 @@ from collections import Counter
 # import libraries for ML
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, QuantileTransformer, Normalizer
 from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -24,51 +23,39 @@ from sklearn.multiclass import OneVsRestClassifier
 # Fix seed value for reproducibility
 np.random.seed(1234)
 
-N = 32
-OVERLAP = 0
-MDL = "_segment-" + str(N) + "_overlap-newf-" + str(OVERLAP * 100)
+N = 10
+OVERLAP = 0.8
 
 # initialise logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-CG3002_FILEPATH = os.path.join('/', 'CG3002')
+CG3002_FILEPATH = os.path.join("/", "CG3002")
 
 # set constant flag for which classifier to use
 '''
-0: OneVsRestClassifier(estimator = MLPClassifier(activation='tanh')),
-1: OneVsRestClassifier(estimator = MLPClassifier()),
-2: MLPClassifier(activation='tanh'),
-3: MLPClassifier(),
-4: OneVsRestClassifier(estimator = SVC(kernel="linear", C=0.025)),
-5: SVC(kernel="linear", C=0.025),
-6: RandomForestClassifier(max_depth=5, n_estimators=200, max_features=1),
+0: OneVsRestClassifier(estimator = MLPClassifier(activation="tanh")),
+1: OneVsRestClassifier(estimator = SVC(kernel="linear", C=0.025)),
+2: MLPClassifier(activation="tanh"),
+3: RandomForestClassifier(max_depth=5, n_estimators=200, max_features=1),
+4: SVC(kernel="linear", C=0.025),
 '''
 
 MODEL_UNIQUE_IDS = {
-    0: 'OneVsRest Classifier with ANN estimator',
-    1: 'OneVsRest Classifier with SVC estimator',
-    2: 'ANN Classifier',
-    3: 'Random Forest Classifier with 200 trees',
-    4: 'Linear Support Vector Machine',
+    0: "ovr_mlp",
+    1: "ovr_svm",
+    2: "mlp",
+    3: "rf",
+    4: "svm"
 }
 
 CONFIDENCE_THRESHOLD = 0.75
 
 ENC_LIST = [
-    ('sidestep', 0),
-    ('number7', 1),
-    ('chicken', 2),
-    ('wipers', 3),
-    ('turnclap', 4),
-    ('numbersix', 5),
-    ('salute', 6),
-    ('mermaid', 7),
-    ('swing', 8),
-    ('cowboy', 9),
-    ('logout', 10)
-    # ('IDLE', 11),
+    ("chicken", 0),
+    ("wipers", 1),
+    ("number7", 2)
 ]
 
 CLASSLIST = [ pair[0] for pair in ENC_LIST ]
@@ -80,7 +67,7 @@ def precision_recall_f1(Y_pred, Y_test):
     f1 = f1_score(Y_test, Y_pred, average=None, labels=CLASSLIST)
     metrics = {}
     for i in range(0, len(CLASSLIST)):
-        metrics[CLASSLIST[i]] = { 'precision': precision[i], 'recall': recall[i], 'f1': f1[i] }
+        metrics[CLASSLIST[i]] = { "precision": precision[i], "recall": recall[i], "f1": f1[i] }
     return metrics
 
 # Calculate and display various accuracy, precision, recall and f1 scores
@@ -96,20 +83,20 @@ def calculatePerformanceMetrics(Y_pred, Y_true, dataset_type):
     logger.info("Number of cases that were incorrect: " + str(num_incorrect))
     logger.info("Accuracy: " + str(accuracy))
     for i in range(0, len(CLASSLIST)):
-        logger.info("Precision " + CLASSLIST[i] + ": " + str(metrics[CLASSLIST[i]]['precision']))
-        logger.info("Recall " + CLASSLIST[i] + ": " + str(metrics[CLASSLIST[i]]['recall']))
-        logger.info("F1 " + CLASSLIST[i] + ": " + str(metrics[CLASSLIST[i]]['f1']))
+        logger.info("Precision " + CLASSLIST[i] + ": " + str(metrics[CLASSLIST[i]]["precision"]))
+        logger.info("Recall " + CLASSLIST[i] + ": " + str(metrics[CLASSLIST[i]]["recall"]))
+        logger.info("F1 " + CLASSLIST[i] + ": " + str(metrics[CLASSLIST[i]]["f1"]))
     logger.info("Confusion Matrix below " + str(CLASSLIST) + " : ")
     logger.info("\n" + str(cf_matrix))
 
 # Initialise sklearn models using classifier
 def initialiseModel(model_index):
     classifiers = [
-        OneVsRestClassifier(estimator = MLPClassifier(activation='tanh')),
+        OneVsRestClassifier(estimator = MLPClassifier(activation="tanh")),
         OneVsRestClassifier(estimator = SVC(kernel="linear", C=0.025)),
-        MLPClassifier(activation='tanh'),
+        MLPClassifier(activation="tanh"),
         RandomForestClassifier(max_depth=5, n_estimators=200, max_features=1),
-        SVC(kernel="linear", C=0.025),
+        SVC(kernel="linear", C=0.025)
     ]
     return classifiers[model_index]
 
@@ -118,42 +105,37 @@ def fitModel(X, Y):
     models = []
     scores = []
     for i in range(0, 5):
-        filepath = os.path.join("classifier_models", "model_" + MODEL_UNIQUE_IDS[i] + ".pkl")
+        filepath = os.path.join("model", MODEL_UNIQUE_IDS[i] + ".pkl")
         model = initialiseModel(i)
         accuracy_scores = cross_val_score(model, X, Y, cv=10, scoring="accuracy", n_jobs=-1)
         scores.append(accuracy_scores.mean())
         model.fit(X, Y)
-        pickle.dump(model, open(filepath, 'wb'))
+        pickle.dump(model, open(filepath, "wb"))
         models.append(model)
     return models, scores
 
+# Delete samples of certain classes from training/testing dataset
 def filterDataset(X, Y, X_test, Y_test):
-    classes_removed = [
-    # No classes need to be removed from self-collected dataset unless experimenting
-        'IDLE',
+    classes_to_remove = [
+        # No classes need to be removed from self-collected dataset unless experimenting
     ]
-    del_idx = [ idx for idx, val in enumerate(Y) if val in classes_removed ]
+    del_idx = [ idx for idx, val in enumerate(Y) if val in classes_to_remove ]
     X = np.delete(X, del_idx, axis=0)
     Y = np.delete(Y, del_idx)
-    del_idx = [ idx for idx, val in enumerate(Y_test) if val in classes_removed ]
+    del_idx = [ idx for idx, val in enumerate(Y_test) if val in classes_to_remove ]
     X_test = np.delete(X_test, del_idx, axis=0)
     Y_test = np.delete(Y_test, del_idx)
     return X, Y, X_test, Y_test
 
-TRAIN_DATASET_PATH = os.path.join("dataset", "train.pkl")
-TEST_DATASET_PATH = os.path.join("dataset", "test.pkl")
+TRAIN_DATASET_PATH = os.path.join("..", "dataset", "train.pkl")
+TEST_DATASET_PATH = os.path.join("..", "dataset", "test.pkl")
 
 if __name__ == "__main__":
     scaler = StandardScaler() # other normalization techniques can also be tried
 
     # Use the dataset prepared from self-collected dataset's raw data values
-    X, Y = pickle.load(open(TRAIN_DATASET_PATH, 'rb'))
-    X_test, Y_test = pickle.load(open(TEST_DATASET_PATH, 'rb'))
-    X, Y, X_test, Y_test = filterDataset(X, Y, X_test, Y_test)
-
-    X = scaler.fit_transform(X)
-    X_test = scaler.transform(X_test)
-    pickle.dump(scaler, open(os.path.join('scaler', 'standard_scaler' + MDL + '.pkl'), 'wb'))
+    X, Y = pickle.load(open(TRAIN_DATASET_PATH, "rb"))
+    X_test, Y_test = pickle.load(open(TEST_DATASET_PATH, "rb"))
 
     logger.info(str(Counter(Y)))
     logger.info(str(Counter(Y_test)))

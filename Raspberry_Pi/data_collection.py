@@ -1,16 +1,14 @@
 import os
-from bluepy.btle import Scanner, DefaultDelegate, Peripheral
-import datetime
-from collections import deque
-import datetime
-import serial
-import socket
 import sys
 import time
+import base64
+import serial
+import socket
+import datetime
+import threading
 from Crypto import Random
 from Crypto.Cipher import AES
-import base64
-import threading
+from bluepy.btle import Scanner, DefaultDelegate, Peripheral
 
 SAVEPATH = os.path.join("..", "dataset", "RawData")
 DANCE_MOVE = "chicken"
@@ -19,7 +17,7 @@ DANCER_2 = "hazmei"
 DANCER_3 = "pankaj"
 
 # Add all 6 bluno addresses here as a list, in the given order
-bt_addrs = ["0c:b2:b7:46:57:50", # dancer 1 left hand bluno
+BLUNO_ADDRESSES = ["0c:b2:b7:46:57:50", # dancer 1 left hand bluno
             "0c:b2:b7:46:35:f5", # dancer 1 right hand bluno
             "0c:b2:b7:46:4d:80", # dancer 2 left hand bluno
             "0c:b2:b7:46:35:96", # dancer 2 right hand bluno
@@ -72,7 +70,7 @@ class RaspberryPi():
 
     def connectToBlunos(self):
         print("Connecting to blunos ...")
-        for addr in bt_addrs:
+        for addr in BLUNO_ADDRESSES:
             p = Peripheral(addr)
             connections.append(p)
             message_buffer.append([])
@@ -83,7 +81,8 @@ class RaspberryPi():
 
     def collectDancerData(self, bluno_left_idx, bluno_right_idx):
         first_string = message_buffer[bluno_left_idx][0].strip("\n")
-        second_string = message_buffer[bluno_right_idx][0].strip("\n")[:-1] #Remove the last \n and comma
+        second_string = message_buffer[bluno_right_idx][0].strip("\n")
+        first_string = first_string.split(",")[:6]
         full_msg = first_string + second_string + "\n"
         dancer_savepath = os.path.join(SAVEPATH, dancer, DANCE_MOVE)
         with open(dancer_savepath, "a+") as f:
