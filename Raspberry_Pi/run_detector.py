@@ -1,389 +1,159 @@
-#!/usr/bin/python3
-
-import time
-
-wait_time = int(round(time.time() * 1000))
-
-import traceback
-import serial
 import os
 import sys
-import threading
-import socket
+import time
 import base64
-from Crypto import Random
-from Crypto.Cipher import  AES
-
-import numpy as np
-from statsmodels import robust
 import pickle
-import logging
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, QuantileTransformer, Normalizer
-from obspy.signal.filter import highpass
-from scipy.signal import savgol_filter
-from scipy.fftpack import fft, ifft, rfft
-from scipy.stats import entropy
+import serial
+import socket
+import datetime
+import threading
+from Crypto import Random
+from Crypto.Cipher import AES
+from collections import deque
+from bluepy.btle import Scanner, DefaultDelegate, Peripheral
 
-# Fix seed value for reproducibility
-np.random.seed(1234)
+# Filepath for pretrained model
+MODEL_SAVEPATH = os.path.join("models", "mlp.pkl")
 
-N = 64
-overlap = 0.5 # change this one! if tweaking overlap for testing!
+# Add all 6 bluno addresses here as a list, in the given order
+bt_addrs = ["0c:b2:b7:46:57:50", # dancer 1 left hand bluno
+            "0c:b2:b7:46:35:f5", # dancer 1 right hand bluno
+            "0c:b2:b7:46:4d:80", # dancer 2 left hand bluno
+            "0c:b2:b7:46:35:96", # dancer 2 right hand bluno
+            "0c:b2:b7:46:39:a6", # dancer 3 left hand bluno
+            "0c:b2:b7:46:41:67"] # dancer 3 right hand bluno
 
-MDL_OVERLAP = 0.95 # not for tweaking, for loading the right model files only!
-MDL = "_segment-" + str(N) + "_overlap-newf-" + str(MDL_OVERLAP * 100)
+connections = []
+connection_threads = []
+message_buffer = []
 
-EXTRACT_SIZE = int((1 - overlap) * N)
-CONFIDENCE_THRESHOLD = 0.25
-INITIAL_WAIT = 61500 # in milliseconds
-MOVE_BUFFER_MIN_SIZE = 2
+class Server():
+    def __init__(self, socket):
+        self.bs = 32
+        self.secret_key = "1234512345123451"
+        self.sock = socket
+        self.sample_queue = deque([], 20)
 
-# Initialize WAIT value in milliseconds depending on N and overlap values
-WAIT = 2000 # for best case prediction time 3.28 seconds for N=32 and overlap=0
-if N == 128 and overlap >= 0.75:
-    WAIT = 1000 # for best case prediction time 4.2 seconds
-elif N == 128 and overlap >= 0.50:
-    WAIT = 1160 # for best case prediction time 5.0 seconds
-elif N == 128 and overlap >= 0.25:
-    WAIT = 1020 # for best case prediction time 5.5 seconds
-elif N == 128 and overlap >= 0:
-    WAIT = 880 # for best case prediction time 6.0 seconds
-elif N == 64 and overlap >= 0.75:
-    WAIT = 1400 # for best case prediction time 3.0 seconds
-elif N == 64 and overlap >= 0.50:
-    WAIT = 2080 # for best case prediction time 4.0 seconds
-elif N == 64 and overlap >= 0.25:
-    WAIT = 1260 # for best case prediction time 3.5 seconds
-elif N == 64 and overlap >= 0:
-    WAIT = 940 # for best case prediction time 3.5 seconds
+    def pad(self, msg):
+        return msg + (self.bs - len(msg)%self.bs)*chr(self.bs - len(msg)%self.bs)
 
-secret_key = "1234123412341234"  # must be at least 16
-BLOCK_SIZE = 32 # AES.block_size
+    def encryptText(self, msg, secret_key):
+        raw = self.pad(msg)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(secret_key,AES.MODE_CBC,iv)
+        return base64.b64encode(iv + cipher.encrypt(raw))
 
-'''
-The following move states are used:
-IDLE (with move_state as 1)
-DETERMINING_DANCE_MOVE (with move_state as 2)
+    def sendData(self, predictedMove, voltage, current, power, cumpower):
+        formattedAnswer = ("#"+ str(predictedMove) + "|" + str(voltage)\
+            + "|" + str(current) + "|" + str(power) + "|" + str(cumpower) + "|")
+        print(formattedAnswer)
+        encryptedText = self.encryptText(formattedAnswer, self.secret_key)
+        self.sock.send(encryptedText)
 
-The machine begins in IDLE state. When idle dance move is received, it moves to DETERMINING_DANCE_MOVE state.
-When dance move is successfully determined and sent to the server, it moves back to IDLE state.
-'''
+class NotificationDelegate(DefaultDelegate):
+    def __init__(self, number):
+        DefaultDelegate.__init__(self)
+        self.number = number
+        self.message_string = ""
 
-# Begin with IDLE state
-move_state = 1
+    def handleNotification(self, cHandle, data):
+        msg = data.decode("utf-8")
+        # print("Notification:\nConnection:" + str(self.number) + "\nMsg:" + msg)
+        self.message_string = self.message_string + msg
+        if "\n" in msg: # if end of message
+            message_buffer[self.number].append(self.message_string)
+            file_name = "data{}".format(self.number)
+            my_file = open(file_name, "a+")
+            my_file.write(self.message_string)
+            self.message_string = ""
 
-STATE = {
-    1: 'IDLE',
-    2: 'DETERMINING_DANCE_MOVE'
-}
+class ConnectionHandlerThread(threading.Thread):
+    def __init__(self, connection_index):
+        threading.Thread.__init__(self)
+        self.connection_index = connection_index
 
-ENC_LIST = [
-    ('sidestep', 0),
-    ('number7', 1),
-    ('chicken', 2),
-    ('wipers', 3),
-    ('turnclap', 4),
-    ('numbersix', 5),
-    ('salute', 6),
-    ('mermaid', 7),
-    ('swing', 8),
-    ('cowboy', 9),
-    ('logout', 10)
-    # ('IDLE', 11),
-]
+    def run(self):
+        connection = connections[self.connection_index]
+        connection.setDelegate(NotificationDelegate(self.connection_index))
+        port = connection.getServiceByUUID("0000dfb0-0000-1000-8000-00805f9b34fb")
+        dfb1 = port.getCharacteristics()[0]
+        connection.writeCharacteristic((dfb1.getHandle() + 1), b"\x01\x00")
 
-ENC_DICT = {
-    0: 'sidestep',
-    1: 'number7',
-    2: 'chicken',
-    3: 'wipers',
-    4: 'turnclap',
-    5: 'numbersix',
-    6: 'salute',
-    7: 'mermaid',
-    8: 'swing',
-    9: 'cowboy',
-    10: 'logout'
-    # 11: 'IDLE',
-}
-
-CLASSLIST = [ pair[0] for pair in ENC_LIST ]
-
-danceMoveBuffer = []
-
-previousPacketData = []
-
-# Obtain best class from a given list of class probabilities for every prediction
-def onehot2str(onehot):
-       enc_dict = dict([(i[1],i[0]) for i in ENC_LIST])
-       idx_list = np.argmax(onehot, axis=1).tolist()
-       result_str = []
-       for i in idx_list:
-               result_str.append(enc_dict[i])
-       return np.asarray(result_str)
-
-# Convert a class to its corresponding one hot vector
-def str2onehot(Y):
-   enc_dict = dict(ENC_LIST)
-   new_Y = []
-   for y in Y:
-       vec = np.zeros((1,len(ENC_LIST)),dtype='float64')
-       vec[ 0, enc_dict[y] ] = 1.
-       new_Y.append(vec)
-   del Y
-   new_Y = np.vstack(new_Y)
-   return new_Y
-
-try:
-    # Load model from pickle file
-    model = pickle.load(open(os.path.join('classifier_models', 'model_OneVsRestClassifierMLPtanh_latest' + MDL + '.pkl'), 'rb'))
-except:
-    traceback.print_exc()
-    print("Error in loading pretrained model!")
-    exit()
-
-try:
-    # Load scalers
-    min_max_scaler = pickle.load(open(os.path.join('scaler', 'min_max_scaler' + MDL + '.pkl'), 'rb'))
-    standard_scaler = pickle.load(open(os.path.join('scaler', 'standard_scaler' + MDL + '.pkl'), 'rb'))
-except:
-    traceback.print_exc()
-    print("Error in loading scaler objects!")
-    exit()
-
-# for every segment of data, extract the feature vector
-def extract_feature_vector(X):
-    # # extract acceleration and angular velocity
-    # X_accA = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 0:3], axis=0))))
-    # X_accB = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 3:6], axis=0))))
-    # X_gyro = math.sqrt(sum(map(lambda x:x*x, np.mean(X[:, 6:9], axis=0))))
-    # X_mag = np.asarray([ X_accA, X_accB, X_gyro ])
-
-    # extract time domain features
-    X_mean = np.mean(X, axis=0)
-    X_median = np.median(X, axis=0)
-    X_var = np.var(X, axis=0)
-    X_max = np.max(X, axis=0)
-    X_min = np.min(X, axis=0)
-    X_off = np.subtract(X_max, X_min)
-    X_mad = robust.mad(X, axis=0)
-
-    # extract frequency domain features
-    X_fft_abs = np.abs(fft(X)) # np.abs() if you want the absolute val of complex number
-    X_fft_mean = np.mean(X_fft_abs, axis=0)
-    X_fft_var = np.var(X_fft_abs, axis=0)
-    X_fft_max = np.max(X_fft_abs, axis=0)
-    X_fft_min = np.min(X_fft_abs, axis=0)
-    X_entr = entropy(np.abs(np.fft.rfft(X, axis=0))[1:], base=2)
-
-    # return feature vector by appending all vectors above as one d-dimension feature vector
-    return np.append(X_off, [ X_mean, X_median, X_var, X_mad, X_entr, X_min, X_max, X_fft_mean, X_fft_var, X_fft_max, X_fft_min ])
-
-def predict_dance_move(segment):
-    try:
-        X = extract_feature_vector(segment)
-        Y = model.predict(X)
-        probs = model.predict_proba(X)
-        # return model.predict(X).tolist()[0]
-        return Y[0], max(probs[0])
-    except:
-        traceback.print_exc()
-        print("Error in predicting dance move!")
-
-def readLineCR(port):
-    rv = ""
-    while True:
-        ch = port.read().decode()
-        rv += ch
-        if ch == "\r" or ch == "":
-            return rv
-
-def compute_checksum(data, correct_cs):
-    correct_cs = correct_cs.strip()
-    cs = 0
-    for i in range(len(data)):
-        cs += ord(data[i]) # to get ASCII value of each char
-    if (cs == int(correct_cs)):
-        # print("Packet OK")
-        return True
-    else:
-        print("Bad Checksum")
-        print(data)
-        print(cs)
-        print("correct cs: " + correct_cs)
-        return False
-
-def inputData():
-    # '#action | voltage | current | power | cumulativepower|'
-    action = str(input('Manually enter data: '))
-    data = '#' + action + '|2.0|1.5|5.6|10.10|'
-    return data
-
-def encryption(data, secret_key):
-	# Padding
-	length = BLOCK_SIZE-(len(data)%BLOCK_SIZE)
-	msg = data+((chr(length))*(length))
-	print(msg)
-	# encryption
-	iv = Random.new().read(AES.block_size)
-	cipher = AES.new(secret_key, AES.MODE_CBC, iv)
-	encoded = base64.b64encode(iv + cipher.encrypt(msg))
-	return encoded
-
-def sendToServer(s, data):
-	encryptedData = encryption(data, secret_key)
-	s.send(encryptedData)
-	print('output sent to server')
-
-def lastXDanceMovesSame(danceMoveBuffer):
-        lastXMoves = danceMoveBuffer[-MOVE_BUFFER_MIN_SIZE:]
-        return len(set(lastXMoves)) == 1
-
-try:
-    # Establish socket connection
-    # input on console in this format: IP_address Port_number
-    TCP_IP = sys.argv[1]
-    TCP_PORT = int(sys.argv[2])
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((TCP_IP, TCP_PORT))
-except:
-    traceback.print_exc()
-    print("Error in establishing socket connection with the server!")
-    exit()
-
-# Check if connected to server
-if (s):
-	print("connected to server")
-else:
-	print("not connected to server")
-
-# Establish arduino-rpi connection
-# dataArray = [] # N objects in array, per 20ms
-handshake_flag = False
-data_flag = False
-print("test")
-port = serial.Serial("/dev/serial0", baudrate=115200, timeout=3.0)
-print("set up")
-port.reset_input_buffer()
-port.reset_output_buffer()
-
-while (handshake_flag == False):
-    try:
-        port.write("H".encode())
+        dfb1.write(bytes("H", "utf-8"))
         print("H sent")
-        response = port.read(1)
-        time.sleep(0.5)
-        if (response.decode() == "A"):
-            print("A received, sending N")
-            port.write("N".encode())
-            time.sleep(0.5)
-            handshake_flag= True
-        else:
-            time.sleep(0.5)
-    except:
-        traceback.print_exc()
-        print("Error while attempting a handshake!")
 
-port.reset_input_buffer()
-port.reset_output_buffer()
-print("connected")
-
-countMovesSent = 0
-stoptime = int(round(time.time() * 1000))
-ite = N
-while (data_flag == False):
-    # print("ENTERING")
-    cs = False
-    checksum_data = []
-    movementData = []
-    otherData = []
-    try:
-        if not len(previousPacketData) == 0:
-            ite = EXTRACT_SIZE
-        else:
-            ite = N
-        for i in range(ite): # extract from 0->N-1 = N sets of readings
-            checksum_data = readLineCR(port)
-            # if not len(data) == 13:
-            #     print("Corrupt packet!")
-            #     print(data)
-            #     continue
-            checksum_data, correct_checksum = checksum_data.rsplit(',' , 1)
-            cs = compute_checksum(checksum_data, correct_checksum)
-            if cs:
-                data = checksum_data.split(',')
-                data = [ float(val.strip()) for val in data ]
-                movementData.append(data[:9]) # extract acc1[3], and acc2[3] values
-                otherData.append(data[9:]) # extract voltage, current, power and cumulative power
-    except:
-        traceback.print_exc()
-        print("Error in reading packet!")
-        continue
-
-    if int(round(time.time() * 1000)) - wait_time <= INITIAL_WAIT:
-        continue
-
-    diff = int(round(time.time() * 1000)) - stoptime
-    if diff <= WAIT:
-        continue
-
-    # Add overlapping logic
-    if len(previousPacketData) == N - EXTRACT_SIZE and not EXTRACT_SIZE == N:
-        rawData = previousPacketData + movementData
-        # print("Overlap done")
-    else:
-        rawData = movementData[:]
-        # print("Overlap not done")
-
-    # Add ML Logic
-    # Precondition 1: dataArray has values for acc1[3], acc2[3], gyro[3], voltage[1], current[1], power[1] and energy[1] in that order
-    # Precondition 2: dataArray has N sets of readings, where N is the segment size, hence it has dimensions N*13
-    try:
-        danceMove, predictionConfidence = predict_dance_move(rawData)
-        if predictionConfidence > CONFIDENCE_THRESHOLD:
-            danceMoveBuffer.append(danceMove)
-        # print(len(rawData))
-        print(danceMoveBuffer)
-    except:
-        traceback.print_exc()
-        print("Error in prediction!")
-        continue
-
-    isMoveSent = False
-    if len(danceMoveBuffer) >= MOVE_BUFFER_MIN_SIZE and lastXDanceMovesSame(danceMoveBuffer) == True:
-        try:
-            otherData = np.mean(otherData, axis=0).tolist() # only calculated for overlapped part of the segment
-            voltage = otherData[0]
-            current = otherData[1]
-            power = otherData[2]
-            energy = otherData[3]
-            output = "#" + danceMove + "|" + str(round(voltage, 2)) + "|" + str(round(current, 2)) + "|" + str(round(power, 2)) + "|" + str(round(energy, 2)) + "|"
-            if danceMove == "logout" and not countMovesSent >= 40: # only allow logout to be sent once 40 moves have been sent
+        while True:
+            if connection.waitForNotifications(1):
                 continue
-            # Send output to server
-            sendToServer(s, output)
-            port.reset_input_buffer()
-            port.reset_output_buffer()
-            print("Sent to server: " + str(output) + ".")
-            danceMoveBuffer = []
-            stoptime = int(round(time.time() * 1000))
-            isMoveSent = True
-            countMovesSent += 1
-        except:
-            traceback.print_exc()
-            print("Error in sending dance move to the server!")
-            continue
 
-    if isMoveSent == False:
-        print("System did not change state. Dance move is " + str(danceMove) + " with prediction confidence " + str(predictionConfidence) + " and move buffer size is " + str(len(danceMoveBuffer)) + ".")
+class RaspberryPi():
+    def __init__(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server = None
 
-    # Add overlapping logic
-    if EXTRACT_SIZE >= 0 and EXTRACT_SIZE < N:
-        previousPacketData = rawData[EXTRACT_SIZE:]
-    else:
-        previousPacketData = []
+    def connectToServer(self):
+        IPAddress = sys.argv[1]
+        Port = int(sys.argv[2])
+        server_address = (IPAddress, Port)
+        self.sock.connect(server_address)
+        print("Connected to test server!")
+        self.server = Server(self.sock)
 
-    if isMoveSent == True:
-        previousPacketData = []
+    def connectToBlunos(self):
+        for addr in bt_addrs:
+            p = Peripheral(addr)
+            connections.append(p)
+            message_buffer.append([])
+            t = ConnectionHandlerThread(len(connections)-1)
+            t.start()
+            connection_threads.append(t)
+        print("Connected to blunos!")
 
-    # data_flag = True
+    def connectToMongoDB(self):
+        '''
+        The database used here was set up on mLab.
+        Please setup a similar database on your personal mLab account,
+           create the below environment variables using your credentials
+           and connect using the new credentials.
+        '''
+        client = MongoClient(os.environ["MONGODB_URI"], os.environ["MONGODB_PORT"])
+        db = client[os.environ["MONGODB_DATABASE_NAME"]]
+        db.authenticate(os.environ["MONGODB_USERNAME"], os.environ["MONGODB_PASSWORD"])
+        print("Connected to mongo database!")
+
+    def collectDancerData(self, bluno_left_idx, bluno_right_idx):
+        first_string = message_buffer[bluno_left_idx][0].strip("\n")
+        second_string = message_buffer[bluno_right_idx][0].strip("\n")[:-1] #Remove the last \n and comma
+        full_msg = first_string + second_string + "\n"
+        dancer_savepath = os.path.join(SAVEPATH, dancer, DANCE_MOVE)
+        with open(dancer_savepath, "a+") as f:
+            f.write(full_msg)
+        message_buffer[bluno_left_idx] = message_buffer[bluno_left_idx][1:]
+        message_buffer[bluno_right_idx] = message_buffer[bluno_right_idx][1:]
+
+    def sendToServer(self):
+        self.server.sendData()
+
+    def run(self):
+        try:
+            # Set up all connections
+            self.connectToServer()
+            self.connectToBlunos()
+            self.connectToMongoDB()
+            # Load pretrained model
+            model = pickle.load(open(MODEL_SAVEPATH, "rb"))
+            # Main loop to run real-time prediction of dance moves
+            while 1:
+                if len(message_buffer[0]) > 0 and len(message_buffer[1]) > 0:
+                    self.collectDancerData(0, 1)
+                if len(message_buffer[2]) > 0 and len(message_buffer[3]) > 0:
+                    self.collectDancerData(2, 3)
+                if len(message_buffer[4]) > 0 and len(message_buffer[5]) > 0:
+                    self.collectDancerData(4, 5)
+                continue
+        except KeyboardInterrupt:
+            sys.exit(1)
+
+if __name__ == "__main__":
+    pi = RaspberryPi()
+    pi.run()
