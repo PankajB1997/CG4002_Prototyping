@@ -31,7 +31,7 @@ INITIAL_WAIT = 1.5 # 1.5 second wait before predicting each move
 wait_time = int(round(time.time() * 1000))
 
 # Add all 6 bluno addresses here as a list, in the given order
-BLUNO_ADDRESSES = ["0c:b2:b7:46:57:50", # dancer 1 left hand bluno
+BLUNO_ADDRESSES = ["0c:b2:b7:46:e5:d1", # dancer 1 left hand bluno
                     "0c:b2:b7:46:35:f5", # dancer 1 right hand bluno
                     "0c:b2:b7:46:4d:80", # dancer 2 left hand bluno
                     "0c:b2:b7:46:35:96", # dancer 2 right hand bluno
