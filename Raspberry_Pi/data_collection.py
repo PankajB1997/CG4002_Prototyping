@@ -79,7 +79,7 @@ class RaspberryPi():
             connection_threads.append(t)
         print("Ports Open!")
 
-    def collectDancerData(self, bluno_left_idx, bluno_right_idx):
+    def collectDancerData(self, bluno_left_idx, bluno_right_idx, dancer):
         first_string = message_buffer[bluno_left_idx][0].strip("\n")
         second_string = message_buffer[bluno_right_idx][0].strip("\n")[:-1]
         #first_string = first_string.split(",")[:6]
@@ -98,13 +98,13 @@ class RaspberryPi():
             while 1:
                 # Collect data for dancer 1
                 if len(message_buffer[0]) > 0 and len(message_buffer[1]) > 0:
-                    self.collectDancerData(0, 1)
+                    self.collectDancerData(0, 1, DANCER_1)
                 # Collect data for dancer 2
                 if len(message_buffer[2]) > 0 and len(message_buffer[3]) > 0:
-                    self.collectDancerData(2, 3)
+                    self.collectDancerData(2, 3, DANCER_2)
                 # Collect data for dancer 3
                 if len(message_buffer[4]) > 0 and len(message_buffer[5]) > 0:
-                    self.collectDancerData(4, 5)
+                    self.collectDancerData(4, 5, DANCER_3)
                 continue
         except KeyboardInterrupt:
             sys.exit(1)
