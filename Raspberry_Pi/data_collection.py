@@ -81,8 +81,8 @@ class RaspberryPi():
 
     def collectDancerData(self, bluno_left_idx, bluno_right_idx):
         first_string = message_buffer[bluno_left_idx][0].strip("\n")
-        second_string = message_buffer[bluno_right_idx][0].strip("\n")
-        first_string = first_string.split(",")[:6]
+        second_string = message_buffer[bluno_right_idx][0].strip("\n")[:-1]
+        #first_string = first_string.split(",")[:6]
         full_msg = first_string + second_string + "\n"
         dancer_savepath = os.path.join(SAVEPATH, dancer, DANCE_MOVE)
         with open(dancer_savepath, "a+") as f:
