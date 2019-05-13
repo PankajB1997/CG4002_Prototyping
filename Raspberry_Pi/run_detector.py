@@ -149,16 +149,20 @@ class RaspberryPi():
         results = [ self.dancer_1_result, self.dancer_2_result, self.dancer_3_result ]
         predictedMove = max(set(results), key=results.count)
         if self.db is not None:
+            # data = {
+            #     'timestamp': time.time(),
+            #     'pre': predictedMove,
+            #     'vol': voltage,
+            #     'cur': current,
+            #     'pow': power,
+            #     'ene': cumpower,
+            #     'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
+            # }
             data = {
                 'timestamp': time.time(),
                 'pre': predictedMove,
-                'vol': voltage,
-                'cur': current,
-                'pow': power,
-                'ene': cumpower,
                 'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
-            }
-            self.db.realtime_data.insert(data)
+            }            self.db.realtime_data.insert(data)
 
     def collectDancerData(self, left_hand_data, right_hand_data, dancer_idx):
         self.movementData = [[], [], []]
@@ -169,8 +173,8 @@ class RaspberryPi():
             move_readings = left_values[:6] + right_values[:6]
             self.movementData[dancer_idx].append(move_readings)
             # there is no power data per dancer, only main dancer with rpi system - hazmei
-            self.powerData.append(np.array(left_values[6:]).mean(axis=0).tolist())
-            self.powerData.append(np.array(right_values[6:]).mean(axis=0).tolist())
+            # self.powerData.append(np.array(left_values[6:]).mean(axis=0).tolist())
+            # self.powerData.append(np.array(right_values[6:]).mean(axis=0).tolist())
 
     def getMovementAndPowerData(self):
         dancer_1_left = message_buffer[0][-SEGMENT_SIZE:]
@@ -247,7 +251,7 @@ class RaspberryPi():
                         self.dancer_2_result = self.predictDanceMove(self.movementData[1])
                         self.dancer_3_result = self.predictDanceMove(self.movementData[2])
                     # 3. Calculate average of powerData values for each dancer and then sum their averages
-                    self.calculateCurrentPowerValues() # only main dancer with rpi system will have powerData value - hazmei
+                    # self.calculateCurrentPowerValues() # only main dancer with rpi system will have powerData value - hazmei
                     # 4. Send predicted dance move and average of power values to MongoDB for real-time display on dashboard
                     self.writeToMongoDB(self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])
                     # 5. If predicted result for each dancer is same, send to server with power values and update start_time
