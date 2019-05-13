@@ -110,6 +110,8 @@ class RaspberryPi():
         self.dancer_2_result = None
         self.dancer_3_result = None
         self.movementData = [[], [], []] # list of lists (set of sensor readings for each dancer)
+
+        # power data is only for main rpi. not for all blunos
         self.powerData = [] # list of lists (set of voltage/current/power/cumpower readings for each bluno)
         self.currentPowerReadings = {}
 
@@ -166,6 +168,7 @@ class RaspberryPi():
             right_values = [ float(val.strip()) for val in right_hand_data[i].strip("\n").split(",") ]
             move_readings = left_values[:6] + right_values[:6]
             self.movementData[dancer_idx].append(move_readings)
+            # there is no power data per dancer, only main dancer with rpi system - hazmei
             self.powerData.append(np.array(left_values[6:]).mean(axis=0).tolist())
             self.powerData.append(np.array(right_values[6:]).mean(axis=0).tolist())
 
@@ -174,19 +177,19 @@ class RaspberryPi():
         message_buffer[0] = dancer_1_left[-int(OVERLAP_RATIO * SEGMENT_SIZE):]
         dancer_1_right = message_buffer[1][-SEGMENT_SIZE:]
         message_buffer[1] = dancer_1_right[-int(OVERLAP_RATIO * SEGMENT_SIZE):]
-        self.collectDancerData(dancer_1_left, dancer_1_right, 0)
+        self.collectDancerData(dancer_1_left, dancer_1_right, 0) # collectDancerData will expect powerData per blunos
         dancer_2_left = message_buffer[2][-SEGMENT_SIZE:]
         message_buffer[2] = dancer_2_left[-int(OVERLAP_RATIO * SEGMENT_SIZE):]
         dancer_2_right = message_buffer[3][-SEGMENT_SIZE:]
         message_buffer[3] = dancer_2_right[-int(OVERLAP_RATIO * SEGMENT_SIZE):]
-        self.collectDancerData(dancer_2_left, dancer_2_right, 1)
+        self.collectDancerData(dancer_2_left, dancer_2_right, 1) # collectDancerData will expect powerData per blunos
         dancer_3_left = message_buffer[4][-SEGMENT_SIZE:]
         message_buffer[4] = dancer_3_left[-int(OVERLAP_RATIO * SEGMENT_SIZE):]
         dancer_3_right = message_buffer[5][-SEGMENT_SIZE:]
         message_buffer[5] = dancer_3_right[-int(OVERLAP_RATIO * SEGMENT_SIZE):]
-        self.collectDancerData(dancer_3_left, dancer_3_right, 2)
+        self.collectDancerData(dancer_3_left, dancer_3_right, 2) # collectDancerData will expect powerData per blunos
 
-    def calculateCurrentPowerValues(self):
+    def calculateCurrentPowerValues(self): # this method is only used in run() method
         powerVals = np.sum(np.array(), axis=0).tolist()
         self.currentPowerReadings = {}
         self.currentPowerReadings["voltage"] = powerVals[0]
@@ -244,7 +247,7 @@ class RaspberryPi():
                         self.dancer_2_result = self.predictDanceMove(self.movementData[1])
                         self.dancer_3_result = self.predictDanceMove(self.movementData[2])
                     # 3. Calculate average of powerData values for each dancer and then sum their averages
-                    self.calculateCurrentPowerValues()
+                    self.calculateCurrentPowerValues() # only main dancer with rpi system will have powerData value - hazmei
                     # 4. Send predicted dance move and average of power values to MongoDB for real-time display on dashboard
                     self.writeToMongoDB(self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])
                     # 5. If predicted result for each dancer is same, send to server with power values and update start_time
