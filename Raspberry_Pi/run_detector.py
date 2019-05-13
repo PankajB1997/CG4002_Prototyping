@@ -163,7 +163,8 @@ class RaspberryPi():
                 'timestamp': time.time(),
                 'pre': predictedMove,
                 'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
-            }            self.db.realtime_data.insert(data)
+            }
+            self.db.realtime_data.insert(data)
 
     def collectDancerData(self, left_hand_data, right_hand_data, dancer_idx):
         self.movementData = [[], [], []]
