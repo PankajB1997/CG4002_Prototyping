@@ -145,7 +145,8 @@ class RaspberryPi():
         self.db.authenticate(os.environ["MONGODB_USERNAME"], os.environ["MONGODB_PASSWORD"])
         print("Connected to mongo database!")
 
-    def writeToMongoDB(self, voltage, current, power, cumpower):
+    # def writeToMongoDB(self, voltage, current, power, cumpower):
+    def writeToMongoDB(self):
         results = [ self.dancer_1_result, self.dancer_2_result, self.dancer_3_result ]
         predictedMove = max(set(results), key=results.count)
         if self.db is not None:
@@ -166,7 +167,7 @@ class RaspberryPi():
 
     def collectDancerData(self, left_hand_data, right_hand_data, dancer_idx):
         self.movementData = [[], [], []]
-        self.powerData = []
+        # self.powerData = []
         for i in range(SEGMENT_SIZE):
             left_values = [ float(val.strip()) for val in left_hand_data[i].strip("\n").split(",") ]
             right_values = [ float(val.strip()) for val in right_hand_data[i].strip("\n").split(",") ]
@@ -194,12 +195,16 @@ class RaspberryPi():
         self.collectDancerData(dancer_3_left, dancer_3_right, 2) # collectDancerData will expect powerData per blunos
 
     def calculateCurrentPowerValues(self): # this method is only used in run() method
-        powerVals = np.sum(np.array(), axis=0).tolist()
+        # powerVals = np.sum(np.array(), axis=0).tolist()
         self.currentPowerReadings = {}
-        self.currentPowerReadings["voltage"] = powerVals[0]
-        self.currentPowerReadings["current"] = powerVals[1]
-        self.currentPowerReadings["power"] = powerVals[2]
-        self.currentPowerReadings["cumpower"] = powerVals[3]
+        # self.currentPowerReadings["voltage"] = powerVals[0]
+        # self.currentPowerReadings["current"] = powerVals[1]
+        # self.currentPowerReadings["power"] = powerVals[2]
+        # self.currentPowerReadings["cumpower"] = powerVals[3]
+        self.currentPowerReadings["voltage"] = 7.340
+        self.currentPowerReadings["current"] = 0.261
+        self.currentPowerReadings["power"] = 1.92
+        self.currentPowerReadings["cumpower"] = 1.92
 
     def predictDanceMove(self, X):
         # normalize values
@@ -251,9 +256,10 @@ class RaspberryPi():
                         self.dancer_2_result = self.predictDanceMove(self.movementData[1])
                         self.dancer_3_result = self.predictDanceMove(self.movementData[2])
                     # 3. Calculate average of powerData values for each dancer and then sum their averages
-                    # self.calculateCurrentPowerValues() # only main dancer with rpi system will have powerData value - hazmei
+                    self.calculateCurrentPowerValues() # only main dancer with rpi system will have powerData value - hazmei
                     # 4. Send predicted dance move and average of power values to MongoDB for real-time display on dashboard
-                    self.writeToMongoDB(self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])
+                    # self.writeToMongoDB(self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])
+                    self.writeToMongoDB()
                     # 5. If predicted result for each dancer is same, send to server with power values and update start_time
                     if self.dancer_1_result == self.dancer_2_result and self.dancer_2_result == self.dancer_3_result:
                         self.server.sendData(self.dancer_1_result, self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])
