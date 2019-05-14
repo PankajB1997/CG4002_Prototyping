@@ -3,7 +3,7 @@ import os, pickle
 RAW_DATASET_PATH = os.path.join("..", "dataset", "RawData")
 SAVEPATH = os.path.join("..", "dataset", "data_by_move.pkl")
 
-moves = [ 'chicken', 'wipers', 'number7' ]
+moves = [ 'chicken', 'wipers'] # , 'number7' ]
 
 data_by_move = {}
 
@@ -17,8 +17,8 @@ for move in moves:
         if os.path.exists(move_data_current_dancer):
             with open(move_data_current_dancer) as textfile:
                 for line in textfile:
-                    values = line.split("\t")
-                    if not len(values) == 9:
+                    values = line.split(",")
+                    if not len(values) == 12:
                         continue
                     values = [ val.strip().replace('\n', '') for val in values ]
                     values = list(map(float, values))
