@@ -150,20 +150,20 @@ class RaspberryPi():
         results = [ self.dancer_1_result, self.dancer_2_result, self.dancer_3_result ]
         predictedMove = max(set(results), key=results.count)
         if self.db is not None:
-            # data = {
-            #     'timestamp': time.time(),
-            #     'pre': predictedMove,
-            #     'vol': voltage,
-            #     'cur': current,
-            #     'pow': power,
-            #     'ene': cumpower,
-            #     'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
-            # }
             data = {
                 'timestamp': time.time(),
                 'pre': predictedMove,
+                'vol': voltage,
+                'cur': current,
+                'pow': power,
+                'ene': cumpower,
                 'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
             }
+            # data = {
+            #     'timestamp': time.time(),
+            #     'pre': predictedMove,
+            #     'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
+            # }
             self.db.realtime_data.insert(data)
 
     def collectDancerData(self, left_hand_data, right_hand_data, dancer_idx):
