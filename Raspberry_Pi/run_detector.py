@@ -169,6 +169,8 @@ class RaspberryPi():
 
     def collectDancerData(self, left_hand_data, right_hand_data, dancer_idx):
         self.movementData = [[], [], []]
+        print(right_hand_data)
+        print(left_hand_data)
         # self.powerData = []
         for i in range(SEGMENT_SIZE):
             left_values = [ float(val.strip()) for val in left_hand_data[i].strip("\n").split(",") ]
