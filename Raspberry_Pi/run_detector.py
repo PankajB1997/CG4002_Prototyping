@@ -9,6 +9,7 @@ import socket
 import datetime
 import threading
 import numpy as np
+from collections import deque
 from Crypto import Random
 from Crypto.Cipher import AES
 from statsmodels import robust
