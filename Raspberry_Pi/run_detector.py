@@ -173,8 +173,8 @@ class RaspberryPi():
         print(left_hand_data)
         # self.powerData = []
         for i in range(SEGMENT_SIZE):
-            left_values = [ float(val.strip()) for val in left_hand_data[i].strip("\n").split(",") ]
-            right_values = [ float(val.strip()) for val in right_hand_data[i].strip("\n").split(",") ]
+            left_values = [ float(val.strip()) for val in left_hand_data[i].strip("\n").strip(',').split(",") ]
+            right_values = [ float(val.strip()) for val in right_hand_data[i].strip("\n").strip(',').split(",") ]
             move_readings = left_values[:6] + right_values[:6]
             self.movementData[dancer_idx].append(move_readings)
             # there is no power data per dancer, only main dancer with rpi system - hazmei
