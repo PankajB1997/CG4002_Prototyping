@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # Get all segments for every move one by one
     # for every segment for a given move, extract the feature vector
     # in the end, store a list of tuple pairs of (feature_vector, move_class) to pickle file
-    raw_data_all_moves = pickle.load(open(os.path.join(DATASET_FILEPATH, "left_right.pkl"), "rb"))
+    raw_data_all_moves = pickle.load(open(os.path.join(DATASET_FILEPATH, "data_by_move.pkl"), "rb"))
     raw_data = {}
     for move in raw_data_all_moves:
         if len(raw_data_all_moves[move]) > 0:
