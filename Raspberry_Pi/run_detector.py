@@ -134,38 +134,38 @@ class RaspberryPi():
             connection_threads.append(t)
         print("Connected to blunos!")
 
-    def connectToMongoDB(self):
-        '''
-        The database used here was set up on mLab.
-        Please setup a similar database on your personal mLab account,
-           create the below environment variables using your credentials
-           and connect using the new credentials.
-        '''
-        client = MongoClient(os.environ["MONGODB_URI"], os.environ["MONGODB_PORT"])
-        self.db = client[os.environ["MONGODB_DATABASE_NAME"]]
-        self.db.authenticate(os.environ["MONGODB_USERNAME"], os.environ["MONGODB_PASSWORD"])
-        print("Connected to mongo database!")
+    # def connectToMongoDB(self):
+    #     '''
+    #     The database used here was set up on mLab.
+    #     Please setup a similar database on your personal mLab account,
+    #        create the below environment variables using your credentials
+    #        and connect using the new credentials.
+    #     '''
+    #     client = MongoClient(os.environ["MONGODB_URI"], os.environ["MONGODB_PORT"])
+    #     self.db = client[os.environ["MONGODB_DATABASE_NAME"]]
+    #     self.db.authenticate(os.environ["MONGODB_USERNAME"], os.environ["MONGODB_PASSWORD"])
+    #     print("Connected to mongo database!")
 
-    # def writeToMongoDB(self, voltage, current, power, cumpower):
-    def writeToMongoDB(self):
-        results = [ self.dancer_1_result, self.dancer_2_result, self.dancer_3_result ]
-        predictedMove = max(set(results), key=results.count)
-        if self.db is not None:
-            data = {
-                'timestamp': time.time(),
-                'pre': predictedMove,
-                'vol': voltage,
-                'cur': current,
-                'pow': power,
-                'ene': cumpower,
-                'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
-            }
-            # data = {
-            #     'timestamp': time.time(),
-            #     'pre': predictedMove,
-            #     'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
-            # }
-            self.db.realtime_data.insert(data)
+    # # def writeToMongoDB(self, voltage, current, power, cumpower):
+    # def writeToMongoDB(self):
+    #     results = [ self.dancer_1_result, self.dancer_2_result, self.dancer_3_result ]
+    #     predictedMove = max(set(results), key=results.count)
+    #     if self.db is not None:
+    #         data = {
+    #             'timestamp': time.time(),
+    #             'pre': predictedMove,
+    #             'vol': voltage,
+    #             'cur': current,
+    #             'pow': power,
+    #             'ene': cumpower,
+    #             'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
+    #         }
+    #         # data = {
+    #         #     'timestamp': time.time(),
+    #         #     'pre': predictedMove,
+    #         #     'emg': random.uniform(-1, 1) # emg sensor is currently unused, hence random values sent
+    #         # }
+    #         self.db.realtime_data.insert(data)
 
     def collectDancerData(self, left_hand_data, right_hand_data, dancer_idx):
         self.movementData = [[], [], []]
@@ -240,7 +240,7 @@ class RaspberryPi():
             # Set up all connections
             self.connectToServer()
             self.connectToBlunos()
-            self.connectToMongoDB()
+            #self.connectToMongoDB()
             # Load pretrained model and scaler
             self.model = pickle.load(open(MODEL_SAVEPATH, "rb"))
             self.scaler = pickle.load(open(SCALER_SAVEPATH, "rb"))
@@ -261,7 +261,7 @@ class RaspberryPi():
                     self.calculateCurrentPowerValues() # only main dancer with rpi system will have powerData value - hazmei
                     # 4. Send predicted dance move and average of power values to MongoDB for real-time display on dashboard
                     # self.writeToMongoDB(self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])
-                    self.writeToMongoDB()
+                    #self.writeToMongoDB()
                     # 5. If predicted result for each dancer is same, send to server with power values and update start_time
                     if self.dancer_1_result == self.dancer_2_result and self.dancer_2_result == self.dancer_3_result:
                         self.server.sendData(self.dancer_1_result, self.currentPowerReadings["voltage"], self.currentPowerReadings["current"], self.currentPowerReadings["power"], self.currentPowerReadings["cumpower"])

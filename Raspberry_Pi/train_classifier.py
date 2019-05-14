@@ -54,8 +54,8 @@ CONFIDENCE_THRESHOLD = 0.75
 
 ENC_LIST = [
     ("chicken", 0),
-    ("wipers", 1)
-    #("number7", 2)
+    ("wipers", 1),
+    ("number7", 2)
 ]
 
 CLASSLIST = [ pair[0] for pair in ENC_LIST ]
