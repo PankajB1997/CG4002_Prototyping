@@ -1,29 +1,31 @@
 # Hardware Documentation
 
-Sensor code can be found in the `somewhere` folder.  
-Sensor schematic can be found in the `somewhere` folder.  
-Circuit design can be found in the `somewhere` folder.  
+**Sensor code can be found in the `Arduino` folder.**  
+<!-- Sensor schematic can be found in the `somewhere` folder.   -->
+<!-- Circuit design can be found in the `somewhere` folder.   -->
 
-## Hardware Components & Sensors
-- 6x AA rechargeable battery
-- 1x 6 AA battery holder
-- 1x GP ReCyko+ AA Charger
-- 1x Ankle support
-- 1x Li-Po Charger
-- 4x 3.7V 150mAh Li-Po
-- 2x 3.7V 500mAh Li-Po
-- 10x Bluno Beetle
-- 30x CR2032 Coin Cell battery
-- 2x GT-511C1R Fingerprint Sensor
-- 1x MyoWare EMG Sensor
-- 14x Biomedical Stickers
-- 1x EMG cable
-- 1x Raspberry Pi
-- 1x Micro SD card
-- 6x MPU-6050 Accel/Gyro Sensor
-- 1x 5V 3A LDO Regulator
-- 6x DC-DC 3.3V 0.5A Regulator
-- 1x INA169 Current Sensor
+## Hardware Components & Sensors  
+| Count | Brand | Type | Purchased from | Remarks |
+| --- | --- | --- | --- | --- |
+| 6 | ?? | AA Rechargeable Battery | | |
+| 1 | ?? | 6 AA Battery Holder | | |
+| 1 | GP ReCyko+ | AA Charger | | |
+| 1 | Daiso | Ankle Support | | |
+| 1 | ?? | Li_po Charger | | |
+| 4 | Unicell | 3.7V 150mAh Li-Po Battery | | |
+| 2 | Unicell | 3.7V 500mAh Li-Po Battery | | |
+| 10 | DFRobot | Bluno Beetle | | |
+| 30 | Mitsubishi + others | CR2032 Lithium Coin Cell Battery | | |
+| 2 | ?? | GT511-C1R Fingerprint Sensor | | Borrowed from Prof Peh |
+| 1 | Sparkfun | MyoWare EMG Sensor | SGBotic | |
+| 14 | ?? | Biomedical Stickers | SGBotic | |
+| 1 | ?? | EMG Cable | SGBotic | |
+| 1 | ?? | Raspberry Pi 3 Model B | | Borrowed from DSA Lab |
+| 1 | ?? | Micro SD Card | | Borrowed from DSA Lab |
+| 6 | ?? | MPU-6050 Accel/Gyro Sensor (IMU) | | Borrowed from DSA Lab |
+| 1 | ?? | 5V 3A LDO Regulator | RS Singapore | |
+| 6 | Pololu | DC-DC 3.3V 0.5A Regulator | SGBotic | |
+| 1 | Sparkfun | INA169 Current Sensor | | Borrowed from DSA Lab |
 
 ## Hardware Setup  
 ![Pololu DC-DC 3.3V 500mA Regulator](./images/dcdc-regulator.JPG)
