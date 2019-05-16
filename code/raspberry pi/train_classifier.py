@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-CG3002_FILEPATH = os.path.join("/", "CG3002")
+CG3002_FILEPATH = os.path.join("/", "CG4002_Prototyping")
 
 # set constant flag for which classifier to use
 '''
@@ -131,7 +131,7 @@ TRAIN_DATASET_PATH = os.path.join("..", "dataset", "train.pkl")
 TEST_DATASET_PATH = os.path.join("..", "dataset", "test.pkl")
 
 if __name__ == "__main__":
-    scaler = StandardScaler() # other normalization techniques can also be tried
+    #scaler = StandardScaler() # other normalization techniques can also be tried
 
     # Use the dataset prepared from self-collected dataset's raw data values
     X, Y = pickle.load(open(TRAIN_DATASET_PATH, "rb"))

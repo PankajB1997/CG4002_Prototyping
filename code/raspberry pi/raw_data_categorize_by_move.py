@@ -17,8 +17,8 @@ for move in moves:
         if os.path.exists(move_data_current_dancer):
             with open(move_data_current_dancer) as textfile:
                 for line in textfile:
-                    values = line.split("\t")
-                    if not len(values) == 9:
+                    values = line.split(",")
+                    if not len(values) == 12:
                         continue
                     values = [ val.strip().replace('\n', '') for val in values ]
                     values = list(map(float, values))

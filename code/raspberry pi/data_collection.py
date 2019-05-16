@@ -11,7 +11,7 @@ from Crypto.Cipher import AES
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral
 
 SAVEPATH = os.path.join("..", "dataset", "RawData")
-DANCE_MOVE = "chicken"
+DANCE_MOVE = "number7"
 DANCER_1 = "ashley"
 DANCER_2 = "hazmei"
 DANCER_3 = "pankaj"
