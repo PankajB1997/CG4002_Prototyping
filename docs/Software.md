@@ -4,7 +4,7 @@ The software part consists of two main components: the machine learning aspect t
 
 ## Machine Learning
 
-The Machine Learning scripts are added to the `Raspberry_Pi/` folder. A detailed list of all the ML scripts is as below:-  
+The Machine Learning scripts are added to the `code/raspberry pi/` folder. A detailed list of all the ML scripts is as below:-  
   
 The following scripts can be completed (though may be improved):  
 
