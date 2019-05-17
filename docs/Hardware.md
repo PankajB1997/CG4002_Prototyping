@@ -6,10 +6,10 @@
 ## Hardware Code (Bluno Beetle)
 **Note:** Code can be found in the '**`code/arduino`**' folder.  
 There are 2 set of freeRTOS code for the Bluno Beetle:  
-1. [i2c comms code](./code/freeRTOS/bluno_i2c-io_board/) - RPi <--> 1x Bluno Beetle (Fingerprint, Power, EMG)
-2. [BLE comms code](./code/freeRTOS/bluno_mpu6050-hand) - RPi <--> 6x Bluno Beetle (IMU data - accelerometer + gyrometer)  
+1. [i2c comms code](../code/freeRTOS/bluno_i2c-io_board/) - RPi <--> 1x Bluno Beetle (Fingerprint, Power, EMG)
+2. [BLE comms code](../code/freeRTOS/bluno_mpu6050-hand/) - RPi <--> 6x Bluno Beetle (IMU data - accelerometer + gyrometer)  
 
-Individual arduino sensor code can be found in [here](./code/arduino)
+Individual arduino sensor code can be found in [here](../code/arduino)
 
 ---
 
