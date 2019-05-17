@@ -6,8 +6,10 @@
 ## Hardware Code (Bluno Beetle)
 **Note:** Code can be found in the '**`code/arduino`**' folder.  
 There are 2 set of freeRTOS code for the Bluno Beetle:  
-1. i2c comms code - RPi <--> 1x Bluno Beetle (Fingerprint, Power, EMG)
-2. BLE comms code - RPi <--> 6x Bluno Beetle (IMU data - accelerometer + gyrometer)
+1. [i2c comms code](./code/freeRTOS/bluno_i2c-io_board/) - RPi <--> 1x Bluno Beetle (Fingerprint, Power, EMG)
+2. [BLE comms code](./code/freeRTOS/bluno_mpu6050-hand) - RPi <--> 6x Bluno Beetle (IMU data - accelerometer + gyrometer)  
+
+Individual arduino sensor code can be found in [here](./code/arduino)
 
 ---
 
@@ -30,8 +32,8 @@ There are 2 set of freeRTOS code for the Bluno Beetle:
 | 1 | Raspberry Pi Foundation | Raspberry Pi 3 Model B | - | Borrowed from DSA Lab |
 | 1 | Samsung | Micro SD Card | - | Borrowed from DSA Lab |
 | 6 | TDK - InvenSense | MPU-6050 Accel/Gyro Sensor (IMU) | - | Borrowed from DSA Lab |
-| 1 | Texas Instrument | LM1085IT-5.0/NOPB 5V 3A LDO Regulator | [RS Components Singapore](https://sg.rs-online.com/web/p/low-dropout-voltage-regulators/1005917/) | - |
-| 6 | Pololu | S7V8F3 DC-DC 3.3V 500mA Regulator | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=1831) | - |
+| 1 | Texas Instrument | LM1085IT-5.0/NOPB 5V 3A LDO Regulator | [RS Components Singapore](https://sg.rs-online.com/web/p/low-dropout-voltage-regulators/1005917/) | Regulator runs hot during operation. **Do not touch** while in use. |
+| 6 | Pololu | S7V8F3 DC-DC 3.3V 1A Regulator | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=1831) | - |
 | 1 | Sparkfun | INA169 Current Sensor | - | Borrowed from DSA Lab |
 
 ---
@@ -123,13 +125,24 @@ There are 2 set of freeRTOS code for the Bluno Beetle:
 ---
 
 ## Hardware Images  
-![Pololu DC-DC 3.3V 500mA Regulator](./images/dcdc-regulator.JPG)  
-**Pololu DC-DC 3.3V 500mA Regulator**
-
-![MyoWare EMG](./images/myoware_emg.JPG)  
-**MyoWare EMG**
-
 ![RPi3 I/O hub](./images/rpi-io-hub.JPG)  
 **RPi3 I/O hub**  
+**Note**: Do not touch the LDO Regulator (in red) during operation as it becomes hot during operation. The INA169 Current Sensor is marked in green.  
+
+![Beetle BLE - Dancer Hand](./images/bluno_front.JPG)  
+**Beetle BLE**  
+**Note**: The polarity of the power source matters as the circuit is not protected against reverse polarity. Make sure the notch of the input in facing down.  
+The resistors on the circuit serves no purpose as it was for ensuring the LiPo battery supply shut off when it is below 3V for safety.
+
+![Pololu DC-DC 3.3V 500mA Regulator](./images/dcdc-regulator.JPG)  
+**Pololu S7V8F3 DC-DC 3.3V 1A Regulator**
+
+![MyoWare EMG](./images/myoware_emg.JPG)  
+**MyoWare EMG**  
+**Note**: Either use the following pin (+, -, SIG) for the rectified EMG signal or (+, -, RAW) for the raw EMG signal. No gain is applied to the raw EMG signal.
+
+![FPS GT511-C1R](./images/fps_GT511-C1R_front.JPG)  
+**GT511-C1R Fingerprint Sensor**  
+
 
 ---
