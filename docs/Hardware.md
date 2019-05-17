@@ -30,7 +30,7 @@ There are 2 set of freeRTOS code for the Bluno Beetle:
 | 1 | Raspberry Pi Foundation | Raspberry Pi 3 Model B | - | Borrowed from DSA Lab |
 | 1 | Samsung | Micro SD Card | - | Borrowed from DSA Lab |
 | 6 | TDK - InvenSense | MPU-6050 Accel/Gyro Sensor (IMU) | - | Borrowed from DSA Lab |
-| 1 | - | 5V 3A LDO Regulator | [RS Components Singapore](https://sg.rs-online.com/web/?cm_mmc=SG-PPC-DS3A-_-google-_-0_SG_EN_Brand_RS%7CVariations_Exact-_-RS%7CVariations-_-rs+Singapore&matchtype=e&kwd-133074612310&gclid=EAIaIQobChMI4pbBhMOf4gIV2gorCh0R4g06EAAYASAAEgJl6PD_BwE&gclsrc=aw.ds) | - |
+| 1 | - | 5V 3A LDO Regulator | [RS Components Singapore](https://sg.rs-online.com/) | - |
 | 6 | Pololu | DC-DC 3.3V 500mA Regulator | [SGBotic](https://www.sgbotic.com/) | - |
 | 1 | Sparkfun | INA169 Current Sensor | - | Borrowed from DSA Lab |
 
@@ -53,11 +53,11 @@ There are 2 set of freeRTOS code for the Bluno Beetle:
 | 2 | GND | Connected to the GND of the circuit |
 | 3 | SDA | SDA to RPi3 SDA pin for i2c |
 | 4 | SCL | SCL to RPi3 SCL pin for i2c |
-| 5 | A0 | Measures the battery voltage from the voltage divider circuit |
-| 6 | A1 | Measures the circuit current draw from the INA169 current sensor |
-| 7 | A2 | Measre the EMG value **(Not implemented)** |
-| 8 | D6 | Software Serial for GT-511C1R Fingerprint Sensor **(Not implemented)** |
-| 9 | D7 | Software Serial for GT-511C1R Fingerprint Sensor **(Not implemented)** | 
+| 5 | A0 | Read the battery voltage from the voltage divider circuit |
+| 6 | A1 | Read the circuit current draw from the INA169 current sensor |
+| 7 | A2 | Read the EMG value **(Not implemented)** |
+| 8 | D6 | Read Serial for GT-511C1R Fingerprint Sensor **(Not implemented)** |
+| 9 | D7 | Read Serial for GT-511C1R Fingerprint Sensor **(Not implemented)** | 
 
 
 ### INA169 Current Sensor (on RPi3 I/O hub)
