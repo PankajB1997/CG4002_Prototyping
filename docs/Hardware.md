@@ -18,20 +18,20 @@ There are 2 set of freeRTOS code for the Bluno Beetle:
 | 1 | - | 6 AA Battery Holder | - | Borrowed from DSA Lab |
 | 1 | GP ReCyko+ | AA Charger | - | Borrowed from DSA Lab |
 | 1 | Daiso | Ankle Support | Daiso | - |
-| 1 | Sparkfun | LiPo Charger Basic | [SGBotic](https://www.sgbotic.com/) | - |
+| 1 | Sparkfun | LiPo Charger Basic | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=999) | - |
 | 4 | Unicell | 3.7V 150mAh LiPo Battery | [Unicell](http://battery.com.sg/) (Sim Lim Square) | - |
 | 2 | Unicell | 3.7V 500mAh LiPo Battery | [Unicell](http://battery.com.sg/) (Sim Lim Square) | - |
-| 10 | DFRobot | Bluno Beetle | [DFRobot](https://www.dfrobot.com/) | - |
+| 10 | DFRobot | Beetle BLE | [DFRobot](https://www.dfrobot.com/product-1259.html) | - |
 | 30 | Mitsubishi + others | CR2032 Lithium Coin Cell Battery | Daiso | Cheapest at 2 for $2 |
 | 2 | adh-tech | GT-511C1R Fingerprint Sensor | - | Borrowed from Prof Peh |
-| 1 | Sparkfun | MyoWare EMG Sensor | [SGBotic](https://www.sgbotic.com/) | - |
-| 14 | - | Biomedical Stickers | [SGBotic](https://www.sgbotic.com/) | - |
-| 1 | - | EMG Cable | [SGBotic](https://www.sgbotic.com/) | - |
+| 1 | Sparkfun | MyoWare EMG Sensor | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=1999) | - |
+| 14 | - | Biomedical Sensor Pad | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=1647) | - |
+| 1 | - | Sensor Cable - Electrode Pads | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=1648) | - |
 | 1 | Raspberry Pi Foundation | Raspberry Pi 3 Model B | - | Borrowed from DSA Lab |
 | 1 | Samsung | Micro SD Card | - | Borrowed from DSA Lab |
 | 6 | TDK - InvenSense | MPU-6050 Accel/Gyro Sensor (IMU) | - | Borrowed from DSA Lab |
-| 1 | - | 5V 3A LDO Regulator | [RS Components Singapore](https://sg.rs-online.com/) | - |
-| 6 | Pololu | DC-DC 3.3V 500mA Regulator | [SGBotic](https://www.sgbotic.com/) | - |
+| 1 | Texas Instrument | LM1085IT-5.0/NOPB 5V 3A LDO Regulator | [RS Components Singapore](https://sg.rs-online.com/web/p/low-dropout-voltage-regulators/1005917/) | - |
+| 6 | Pololu | S7V8F3 DC-DC 3.3V 500mA Regulator | [SGBotic](https://www.sgbotic.com/index.php?dispatch=products.view&product_id=1831) | - |
 | 1 | Sparkfun | INA169 Current Sensor | - | Borrowed from DSA Lab |
 
 ---
