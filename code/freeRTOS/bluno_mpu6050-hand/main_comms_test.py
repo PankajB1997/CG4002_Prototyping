@@ -1,7 +1,6 @@
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral
 import datetime
 from collections import deque
-# import datetime # why import datetime twice???
 import serial
 import socket
 import sys
